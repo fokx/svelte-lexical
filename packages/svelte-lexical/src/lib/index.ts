@@ -48,6 +48,7 @@ export {
   TEXT_FORMAT_TRANSFORMERS,
   ELEMENT_TRANSFORMERS,
   ALL_TRANSFORMERS,
+  PLAYGROUND_TRANSFORMERS,
 } from './core/plugins/MardownShortcut/transformers.js';
 
 export {HeadingNode, QuoteNode} from '@lexical/rich-text';
@@ -90,6 +91,7 @@ export {default as InsertHRDropDownItem} from './components/toolbar/InsertDropDo
 export {default as InsertImageDropDownItem} from './components/toolbar/InsertDropDown/InsertImageDropDownItem.svelte';
 export {default as FontFamilyDropDown} from './components/toolbar/FontFamilyDropDown.svelte';
 export {default as FontSizeDropDown} from './components/toolbar/FontSizeDropDown.svelte';
+export {default as ToggleMarkdownButton} from './components/toolbar/ToggleMarkdownButton.svelte';
 export {default as FontSizeEntry} from './components/toolbar/FontSizeEntry.svelte';
 export {default as InsertLink} from './components/toolbar/InsertLink.svelte';
 export {default as CodeLanguageDropDown} from './components/toolbar/CodeLanguageDropDown.svelte';
@@ -111,6 +113,9 @@ export type {ImagePayload} from './core/plugins/Image/ImageNode.js';
 export {getEditor, getActiveEditor} from './core/composerContext.js';
 
 export {default as ActionBar} from './components/actionbar/ActionBar.svelte';
+export {default as ImportButton} from './components/actionbar/ImportButton.svelte';
+export {default as ExportButton} from './components/actionbar/ExportButton.svelte';
+export {default as ReadonlyButton} from './components/actionbar/ReadonlyButton.svelte';
 export {default as TreeViewPlugin} from './core/plugins/TreeView/TreeViewPlugin.svelte';
 
 export {default as ContentEditable} from './core/ContentEditable.svelte';
