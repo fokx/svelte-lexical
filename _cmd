@@ -1,0 +1,3 @@
+host=mnz
+rsync -av --delete /f/svelte-lexical $host:/srv/ --exclude={"*.db","node_modules/*","src/lib/server/db/sqlite.db","build/*",".svelte-kit"}
+ssh $host chown -R forum:forum /srv/svelte-lexical
