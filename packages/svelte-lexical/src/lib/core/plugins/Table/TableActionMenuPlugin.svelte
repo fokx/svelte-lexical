@@ -127,6 +127,7 @@
           e.stopPropagation();
           $isMenuOpen = !$isMenuOpen;
         }}
+        aria-label="Table cell action menu"
         bind:this={menuRootRef}>
         <i class="chevron-down"></i>
       </button>

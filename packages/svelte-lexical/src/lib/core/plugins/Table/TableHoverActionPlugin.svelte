@@ -219,11 +219,13 @@
   <button
     class={'PlaygroundEditorTheme__tableAddRows'}
     style={$position}
+    aria-label="Add row"
     onclick={() => insertAction(true)}></button>
 {/if}
 {#if $isShownColumn}
   <button
     class={'PlaygroundEditorTheme__tableAddColumns'}
     style={$position}
+    aria-label="Add column"
     onclick={() => insertAction(false)}></button>
 {/if}

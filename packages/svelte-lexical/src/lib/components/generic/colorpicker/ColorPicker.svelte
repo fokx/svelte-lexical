@@ -89,6 +89,7 @@
       <button
         class={basicColor === selfColor.hex ? ' active' : ''}
         style="background-color: {basicColor}"
+        aria-label="Pick color"
         onclick={() => {
           inputColor = basicColor;
           selfColor = transformColor('hex', basicColor);
