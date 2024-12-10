@@ -163,3 +163,6 @@ export {
 } from './core/nodeSelectionStore.js';
 
 export {$getSelection} from 'lexical';
+
+// theme
+export {default as editorTheme} from './themes/PlaygroundEditorTheme.js';

@@ -6,11 +6,13 @@
  *
  */
 
+import type {EditorThemeClasses} from 'svelte-lexical';
+
 import './CommentEditorTheme.css';
 
-import baseTheme from './PlaygroundEditorTheme';
+import baseTheme from './PlaygroundEditorTheme.js';
 
-const theme = {
+const theme: EditorThemeClasses = {
   ...baseTheme,
   paragraph: 'CommentEditorTheme__paragraph',
 };
