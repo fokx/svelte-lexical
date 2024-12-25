@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import {BoldButton} from '$lib/index.js';
   import {Divider} from '$lib/index.js';
@@ -11,8 +13,8 @@
   import {Toolbar} from '$lib/index.js';
 </script>
 
-<Toolbar   >
-  {#snippet children({ editor, activeEditor, blockType })}
+<Toolbar>
+  {#snippet children({editor, activeEditor, blockType})}
     <FontFamilyDropDown />
     <FontSizeDropDown />
     <Divider />

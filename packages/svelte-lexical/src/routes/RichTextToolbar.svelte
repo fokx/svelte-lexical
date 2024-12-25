@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import InsertTableDialog from '$lib/components/toolbar/dialogs/InsertTableDialog.svelte';
   import InsertTableDropDownItem from '$lib/components/toolbar/InsertDropDown/InsertTableDropDownItem.svelte';
@@ -31,13 +33,13 @@
   import {InsertColumnLayoutDropDownItem} from '../lib/index.js';
   import {InsertColumnsDialog} from '../lib/index.js';
 
-  let imageDialog: InsertImageDialog = $state();
-  let columnsDialog: InsertColumnsDialog = $state();
-  let tableDialog: InsertTableDialog = $state();
+  let imageDialog: InsertImageDialog;
+  let columnsDialog: InsertColumnsDialog;
+  let tableDialog: InsertTableDialog;
 </script>
 
-<Toolbar   >
-  {#snippet children({ editor, activeEditor, blockType })}
+<Toolbar>
+  {#snippet children({editor, activeEditor, blockType})}
     <UndoButton />
     <RedoButton />
     <Divider />
@@ -67,9 +69,9 @@
     <Divider />
     <InsertDropDown>
       <InsertHRDropDownItem />
-      <InsertImageDropDownItem on:click={() => imageDialog.open()} />
-      <InsertColumnLayoutDropDownItem on:click={() => columnsDialog.open()} />
-      <InsertTableDropDownItem on:click={() => tableDialog.open()} />
+      <InsertImageDropDownItem onclick={() => imageDialog.open()} />
+      <InsertColumnLayoutDropDownItem onclick={() => columnsDialog.open()} />
+      <InsertTableDropDownItem onclick={() => tableDialog.open()} />
     </InsertDropDown>
     <Divider />
     <DropDownAlign />

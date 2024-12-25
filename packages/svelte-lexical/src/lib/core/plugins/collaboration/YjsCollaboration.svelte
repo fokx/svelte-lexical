@@ -47,7 +47,7 @@
     shouldBootstrap,
     cursorsContainerRef = null,
     initialEditorState = null,
-    awarenessData = undefined
+    awarenessData = undefined,
   }: Props = $props();
 
   let isReloadingDoc = false;
@@ -63,7 +63,7 @@
   const disconnect = () => {
     try {
       provider.disconnect();
-    } catch (e) {
+    } catch {
       // Do nothing
     }
   };

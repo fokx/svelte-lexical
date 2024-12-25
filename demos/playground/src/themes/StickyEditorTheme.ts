@@ -10,7 +10,7 @@ import type {EditorThemeClasses} from 'svelte-lexical';
 
 import './StickyEditorTheme.css';
 
-import baseTheme from './DefaultEditorTheme.js';
+import baseTheme from './PlaygroundEditorTheme';
 
 const theme: EditorThemeClasses = {
   ...baseTheme,

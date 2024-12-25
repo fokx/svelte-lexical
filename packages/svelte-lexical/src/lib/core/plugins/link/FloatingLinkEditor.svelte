@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import {run} from 'svelte/legacy';
 
   import './FloatingLinkEditor.css';
   import {
@@ -28,9 +28,8 @@
   import {setFloatingElemPositionForLinkEditor} from './setFloatingElemPositionForLinkEditor.js';
   import {sanitizeUrl} from './url.js';
 
-
-  let editorRef: HTMLDivElement | null = $state();
-  let inputRef: HTMLInputElement = $state();
+  let editorRef: HTMLDivElement;
+  let inputRef: HTMLInputElement | undefined = $state();
   let linkUrl = $state('');
   let editedLinkUrl = $state('');
   interface Props {
@@ -40,12 +39,7 @@
     isEditMode: Writable<boolean>;
   }
 
-  let {
-    editor,
-    isLink,
-    anchorElem,
-    isEditMode
-  }: Props = $props();
+  let {editor, isLink, anchorElem, isEditMode}: Props = $props();
   let lastSelection: BaseSelection | null = null;
 
   run(() => {
@@ -222,14 +216,16 @@
           onmousedown={(event) => event.preventDefault()}
           onclick={() => {
             $isEditMode = false;
-          }}></div>
+          }}>
+        </div>
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div
           class="link-confirm"
           role="button"
           tabIndex={0}
           onmousedown={(event) => event.preventDefault()}
-          onclick={handleLinkSubmission}></div>
+          onclick={handleLinkSubmission}>
+        </div>
       </div>
     {:else}
       <div class="link-view">
@@ -239,7 +235,8 @@
           rel="noopener noreferrer">
           {linkUrl}
         </a>
-        <!-- svelte-ignore a11y_click_events_have_key_events, a11y_interactive_supports_focus -->
+        <!-- svelte-ignore a11y_interactive_supports_focus -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div
           class="link-edit"
           role="button"
@@ -248,7 +245,8 @@
           onclick={() => {
             editedLinkUrl = linkUrl;
             $isEditMode = true;
-          }}></div>
+          }}>
+        </div>
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div
           class="link-trash"
@@ -257,7 +255,8 @@
           onmousedown={(event) => event.preventDefault()}
           onclick={() => {
             editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-          }}></div>
+          }}>
+        </div>
       </div>
     {/if}
   {/if}

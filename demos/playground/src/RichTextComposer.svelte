@@ -46,7 +46,7 @@
   } from 'svelte-lexical';
   import {prepopulatedRichText} from './prepopulatedRichText';
   import type {SettingsStore} from './settings/setttingsStore';
-  import {editorTheme as PlaygroundEditorTheme} from 'svelte-lexical';
+  import PlaygroundEditorTheme from './themes/PlaygroundEditorTheme';
   import ToolbarPlayground from './ToolbarPlayground.svelte';
   import {createWebsocketProvider} from './collaboration';
 
@@ -58,15 +58,18 @@
     // @ts-expect-error split view has right and let frames
     window.parent != null && window.parent.frames.right === window;
 
-  let placeholderText = $derived($settings.isCollab
-    ? 'Enter some collaborative rich text...'
-    : $settings.isRichText
-      ? 'Enter some rich text...'
-      : 'Enter some plain text...');
+  let placeholderText = $derived(
+    $settings.isCollab
+      ? 'Enter some collaborative rich text...'
+      : $settings.isRichText
+        ? 'Enter some rich text...'
+        : 'Enter some plain text...',
+  );
 
   let isSmallWidthViewport = $state(true);
 
-  let editorDiv = $state();
+  // svelte-ignore non_reactive_update
+  let editorDiv: HTMLDivElement | undefined;
 
   const initialConfig = {
     editorState: $settings.isCollab

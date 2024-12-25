@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import {run} from 'svelte/legacy';
 
   import {$patchStyleText as patchStyleText} from '@lexical/selection';
   import {$getSelection as getSelection} from 'lexical';
@@ -11,7 +11,6 @@
   const MAX_ALLOWED_FONT_SIZE = 72;
   const DEFAULT_FONT_SIZE = 15;
 
-  // eslint-disable-next-line no-shadow
   enum updateFontSizeType {
     increment = 1,
     decrement,
@@ -22,7 +21,7 @@
 
   let activeEditor = getActiveEditor();
 
-  let inputValue = $state();
+  let inputValue: string;
   run(() => {
     inputValue = $selectionFontSize.slice(0, -2);
   });
@@ -181,7 +180,7 @@
   disabled={!isEditable ||
     ($selectionFontSize !== '' && Number(inputValue) <= MIN_ALLOWED_FONT_SIZE)}
   onclick={() => handleButtonClick(updateFontSizeType.decrement)}
-  aria-label="Decrease font size"
+  aria-label="Increase font size"
   class="toolbar-item sl_font-decrement">
   <i class="format sl_minus-icon"></i>
 </button>
@@ -201,7 +200,7 @@
   disabled={!isEditable ||
     ($selectionFontSize !== '' && Number(inputValue) >= MAX_ALLOWED_FONT_SIZE)}
   onclick={() => handleButtonClick(updateFontSizeType.increment)}
-  aria-label="Increase font size"
+  aria-label="Decrease font size"
   class="toolbar-item sl_font-increment">
   <i class="format sl_add-icon"></i>
 </button>

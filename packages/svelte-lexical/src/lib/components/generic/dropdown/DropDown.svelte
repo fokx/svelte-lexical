@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import {run} from 'svelte/legacy';
 
   import {CAN_USE_DOM} from '../../../environment/canUseDOM.js';
   import DropDownItems from './DropDownItems.svelte';
@@ -23,11 +23,11 @@
     buttonLabel = undefined,
     stopCloseOnClickSelf = false,
     title = undefined,
-    children
+    children,
   }: Props = $props();
 
-  let dropDownRef: HTMLDivElement = $state();
-  let buttonRef: HTMLButtonElement = $state();
+  let dropDownRef = $state<HTMLDivElement | undefined>();
+  let buttonRef: HTMLButtonElement;
   let showDropDown = $state(false);
 
   function handleClose() {

@@ -9,12 +9,10 @@
     buttonClassName: string;
     buttonIconClassName?: string | undefined;
     buttonLabel?: string | undefined;
-    title: any;
+    title: string | undefined;
     stopCloseOnClickSelf?: boolean;
     color: string;
-    onChange: 
-    | ((color: string, skipHistoryStack: boolean) => void)
-    | undefined;
+    onChange: ((color: string, skipHistoryStack: boolean) => void) | undefined;
   }
 
   let {
@@ -24,7 +22,7 @@
     title,
     stopCloseOnClickSelf = true,
     color,
-    onChange
+    onChange,
   }: Props = $props();
 </script>
 

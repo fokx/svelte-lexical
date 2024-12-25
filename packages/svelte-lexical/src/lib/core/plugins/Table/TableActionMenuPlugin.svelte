@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import {run} from 'svelte/legacy';
 
   import {
     $getTableCellNodeFromLexicalNode as getTableCellNodeFromLexicalNode,
@@ -20,13 +20,13 @@
     cellMerge: boolean;
   }
 
-  let { anchorElem, cellMerge }: Props = $props();
+  let {anchorElem, cellMerge}: Props = $props();
 
   const editor = getEditor();
   const isEditable = getIsEditable();
 
   let menuButtonRef: HTMLElement | null = $state(null);
-  let menuRootRef = $state(null);
+  let menuRootRef: HTMLButtonElement | null = $state(null);
   const isMenuOpen = writable(false);
 
   const tableCellNode: Writable<TableCellNode | null> = writable(null);
@@ -120,6 +120,7 @@
 {#if $isEditable}
   <div class="table-cell-action-button-container" bind:this={menuButtonRef}>
     {#if $tableCellNode != null}
+      <!-- svelte-ignore a11y_consider_explicit_label -->
       <button
         type="button"
         class="table-cell-action-button chevron-down"
@@ -127,7 +128,6 @@
           e.stopPropagation();
           $isMenuOpen = !$isMenuOpen;
         }}
-        aria-label="Table cell action menu"
         bind:this={menuRootRef}>
         <i class="chevron-down"></i>
       </button>

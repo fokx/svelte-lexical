@@ -15,7 +15,7 @@
     headingSize: HeadingTagType;
   }
 
-  let { headingSize }: Props = $props();
+  let {headingSize}: Props = $props();
 
   const blockType: Writable<keyof typeof blockTypeToBlockName> =
     getContext('blockType');
@@ -34,7 +34,7 @@
 <DropDownItem
   class={'item ' +
     ($blockType === headingSize ? 'active dropdown-item-active' : '')}
-  on:click={() => formatHeading(headingSize)}>
+  onclick={() => formatHeading(headingSize)}>
   <i class="icon {headingSize}"></i>
   <span class="text">Heading {headingSize.charAt(1)}</span>
 </DropDownItem>

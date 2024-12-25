@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import {run} from 'svelte/legacy';
 
   import ColorPickerDialog from '$lib/components/generic/colorpicker/ColorPickerDialog.svelte';
   import {getEditor} from '$lib/core/composerContext.js';
@@ -48,18 +48,13 @@
     cellMerge: boolean;
   }
 
-  let {
-    onClose,
-    _tableCellNode,
-    setIsMenuOpen,
-    contextRef,
-    cellMerge
-  }: Props = $props();
+  let {onClose, _tableCellNode, setIsMenuOpen, contextRef, cellMerge}: Props =
+    $props();
 
-  let colorPicker: ColorPickerDialog = $state();
+  let colorPicker: ColorPickerDialog;
 
   const editor = getEditor();
-  let dropDownRef: HTMLDivElement = $state();
+  let dropDownRef: HTMLDivElement | null = $state(null);
   let tableCellNode = $state(_tableCellNode);
   let selectionCounts = $state({
     columns: 1,
@@ -539,10 +534,7 @@
       <span class="text">Delete table</span>
     </button>
     <hr />
-    <button
-      type="button"
-      class="item"
-      onclick={() => toggleTableRowIsHeader()}>
+    <button type="button" class="item" onclick={() => toggleTableRowIsHeader()}>
       <span class="text">
         {(tableCellNode.__headerState & TableCellHeaderStates.ROW) ===
         TableCellHeaderStates.ROW

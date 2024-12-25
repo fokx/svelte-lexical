@@ -16,7 +16,7 @@
     showModal?: boolean;
   }
 
-  let { showModal = $bindable(false) }: Props = $props();
+  let {showModal = $bindable(false)}: Props = $props();
   export function open() {
     showModal = true;
   }
@@ -57,7 +57,7 @@
         {#each LAYOUTS as layout}
           <DropDownItem
             class={`item ${currentLabel === layout.label ? 'active dropdown-item-active' : ''}`}
-            on:click={() => {
+            onclick={() => {
               handleClick(layout.label, layout.value);
             }}>
             <span class="text">{layout.label}</span>

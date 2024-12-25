@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+  import {run} from 'svelte/legacy';
 
   import {onMount} from 'svelte';
   import {
@@ -20,7 +20,7 @@
     showModal?: boolean;
   }
 
-  let { showModal = $bindable(false) }: Props = $props();
+  let {showModal = $bindable(false)}: Props = $props();
   export function open() {
     showModal = true;
   }
@@ -31,6 +31,7 @@
       mode = null;
     }
   });
+
   let hasModifier = $state(false);
 
   const editor = getEditor();

@@ -165,4 +165,4 @@ export {
 export {$getSelection} from 'lexical';
 
 // theme
-export {default as editorTheme} from './themes/PlaygroundEditorTheme.js';
+export {default as editorTheme} from './themes/DefaultEditorTheme.js';
