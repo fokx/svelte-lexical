@@ -12,6 +12,7 @@ import prettier from 'prettier';
 import {URLSearchParams} from 'url';
 
 import {selectAll} from '../keyboardShortcuts/index.mjs';
+import path from 'node:path';
 
 export const E2E_PORT = process.env.E2E_PORT || 5173;
 export const E2E_BROWSER = process.env.E2E_BROWSER;
@@ -174,7 +175,7 @@ async function assertHTMLOnPageOrFrame(
   frameName,
   actualHtmlModificationsCallback = (actualHtml) => actualHtml,
 ) {
-  const expected = prettifyHTML(expectedHtml.replace(/\n/gm, ''), {
+  const expected = await prettifyHTML(expectedHtml.replace(/\n/gm, ''), {
     ignoreClasses,
     ignoreInlineStyles,
   });
@@ -183,7 +184,7 @@ async function assertHTMLOnPageOrFrame(
       .locator('div[contenteditable="true"]')
       .first()
       .innerHTML();
-    let actual = prettifyHTML(actualHtml.replace(/\n/gm, ''), {
+    let actual = await prettifyHTML(actualHtml.replace(/\n/gm, ''), {
       ignoreClasses,
       ignoreInlineStyles,
     });
@@ -710,6 +711,11 @@ export function prettifyHTML(string, {ignoreClasses, ignoreInlineStyles} = {}) {
     output = output.replace(/\sstyle="([^"]*)"/g, '');
   }
 
+  // remove blank comments from Svelte
+  output = output.replace(/<!---->/g, '');
+  // remove blanl class attribute from Svelte
+  output = output.replace(/\sclass=""/g, '');
+
   output = output.replace(/\s__playwright_target__="[^"]+"/, '');
 
   return prettier.format(output, {
@@ -952,4 +958,12 @@ export async function dragDraggableMenuTo(
 
 export async function pressInsertLinkButton(page) {
   await click(page, '.toolbar-item[aria-label="Insert link"]');
+}
+
+export function getProjectRootPath() {
+  const basePath = path.basename(process.cwd());
+  if (basePath === 'svelte-lexical') {
+    return path.join('demos', 'playground');
+  }
+  return '';
 }

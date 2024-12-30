@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
   import {
     BlockFormatDropDown,
@@ -34,11 +36,14 @@
     DropDownBackColorPicker,
     InsertColumnLayoutDropDownItem,
     InsertColumnsDialog,
+    InsertTableDialog,
+    InsertTableDropDownItem,
   } from 'svelte-lexical';
   import InsertImageDialog from './InsertImageDialog.svelte';
 
   let imageDialog: InsertImageDialog;
   let columnsDialog: InsertColumnsDialog;
+  let tableDialog: InsertTableDialog;
 </script>
 
 <Toolbar>
@@ -87,6 +92,7 @@
           <InsertImageDropDownItem onclick={() => imageDialog.open()} />
           <InsertColumnLayoutDropDownItem
             onclick={() => columnsDialog.open()} />
+          <InsertTableDropDownItem onclick={() => tableDialog.open()} />
         </InsertDropDown>
         <Divider />
       {/if}
@@ -95,5 +101,6 @@
     <!-- dialogs -->
     <InsertImageDialog bind:this={imageDialog} />
     <InsertColumnsDialog bind:this={columnsDialog} />
+    <InsertTableDialog bind:this={tableDialog} />
   {/snippet}
 </Toolbar>

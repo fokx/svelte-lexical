@@ -7,9 +7,7 @@ export {default as CheckListPlugin} from './core/plugins/CheckListPlugin.svelte'
 export {default as HorizontalRulePlugin} from './core/plugins/HorizontalRulePlugin.svelte';
 export {default as ImagePlugin} from './core/plugins/Image/ImagePlugin.svelte';
 export {default as CaptionEditorHistoryPlugin} from './core/plugins/Image/CaptionEditorHistoryPlugin.svelte';
-export {
-  default as CaptionEditorCollaborationPlugin,
-} from './core/plugins/Image/CaptionEditorCollaborationPlugin.svelte';
+export {default as CaptionEditorCollaborationPlugin} from './core/plugins/Image/CaptionEditorCollaborationPlugin.svelte';
 export {default as PlaceHolder} from './core/plugins/PlaceHolder.svelte';
 export {default as AutoFocusPlugin} from './core/plugins/AutoFocusPlugin.svelte';
 export {default as KeywordPlugin} from './core/plugins/KeywordPlugin.svelte';
@@ -22,10 +20,11 @@ export {default as LinkPlugin} from './core/plugins/link/LinkPlugin.svelte';
 export {sanitizeUrl, validateUrl} from './core/plugins/link/url.js';
 export {default as FloatingLinkEditorPlugin} from './core/plugins/link/FloatingLinkEditorPlugin.svelte';
 export {default as CodeHighlightPlugin} from './core/plugins/CodeBlock/CodeHighlightPlugin.svelte';
-export {
-  default as CodeActionMenuPlugin,
-} from './core/plugins/CodeBlock/CodeActionMenuPlugin/CodeActionMenuPlugin.svelte';
+export {default as CodeActionMenuPlugin} from './core/plugins/CodeBlock/CodeActionMenuPlugin/CodeActionMenuPlugin.svelte';
 export {default as ColumnLayoutPlugin} from './core/plugins/ColumnsLayout/ColumnLayoutPlugin.svelte';
+export {default as TablePlugin} from './core/plugins/Table/TablePlugin.svelte';
+export {default as TableActionMenuPlugin} from './core/plugins/Table/TableActionMenuPlugin.svelte';
+export {default as TableHoverActionPlugin} from './core/plugins/Table/TableHoverActionPlugin.svelte';
 
 export {default as MarkdownShortcutPlugin} from './core/plugins/MardownShortcut/MarkdownShortcutPlugin.svelte';
 export {
@@ -66,6 +65,7 @@ export {CodeNode, CodeHighlightNode} from '@lexical/code';
 export type {Provider} from '@lexical/yjs';
 export {LayoutContainerNode} from './core/plugins/ColumnsLayout/LayoutContainerNode.js';
 export {LayoutItemNode} from './core/plugins/ColumnsLayout/LayoutItemNode.js';
+export {TableNode, TableRowNode, TableCellNode} from '@lexical/table';
 
 // toolbar
 export {default as ToolbarRichText} from './components/richtext/ToolbarRichText.svelte';
@@ -95,29 +95,29 @@ export {default as InsertHRDropDownItem} from './components/toolbar/InsertDropDo
 export {default as InsertImageDropDownItem} from './components/toolbar/InsertDropDown/InsertImageDropDownItem.svelte';
 export {default as FontFamilyDropDown} from './components/toolbar/FontFamilyDropDown.svelte';
 export {default as FontSizeDropDown} from './components/toolbar/FontSizeDropDown.svelte';
+
 export {default as ToggleMarkdownButton} from './components/toolbar/ToggleMarkdownButton.svelte';
+export {default as ImportButton} from './components/actionbar/ImportButton.svelte';
+export {default as ExportButton} from './components/actionbar/ExportButton.svelte';
+export {default as ReadonlyButton} from './components/actionbar/ReadonlyButton.svelte';
+export {
+  $convertToMarkdownString as convertToMarkdownString,
+  $convertFromMarkdownString as convertFromMarkdownString,
+} from '@lexical/markdown';
+
 export {default as FontSizeEntry} from './components/toolbar/FontSizeEntry.svelte';
 export {default as InsertLink} from './components/toolbar/InsertLink.svelte';
 export {default as CodeLanguageDropDown} from './components/toolbar/CodeLanguageDropDown.svelte';
 export {default as MoreStylesDropDown} from './components/toolbar/MoreStylesDropDown/MoreStylesDropDown.svelte';
-export {
-  default as StrikethroughDropDownItem,
-} from './components/toolbar/MoreStylesDropDown/StrikethroughDropDownItem.svelte';
+export {default as StrikethroughDropDownItem} from './components/toolbar/MoreStylesDropDown/StrikethroughDropDownItem.svelte';
 export {default as SubscriptDropDownItem} from './components/toolbar/MoreStylesDropDown/SubscriptDropDownItem.svelte';
-export {
-  default as SuperscriptDropDownItem,
-} from './components/toolbar/MoreStylesDropDown/SuperscriptDropDownItem.svelte';
-export {
-  default as ClearFormattingDropDownItem,
-} from './components/toolbar/MoreStylesDropDown/ClearFormattingDropDownItem.svelte';
-export {
-  default as InsertColumnLayoutDropDownItem,
-} from './components/toolbar/InsertDropDown/InsertColumnLayoutDropDownItem.svelte';
+export {default as SuperscriptDropDownItem} from './components/toolbar/MoreStylesDropDown/SuperscriptDropDownItem.svelte';
+export {default as ClearFormattingDropDownItem} from './components/toolbar/MoreStylesDropDown/ClearFormattingDropDownItem.svelte';
+export {default as InsertColumnLayoutDropDownItem} from './components/toolbar/InsertDropDown/InsertColumnLayoutDropDownItem.svelte';
+export {default as InsertTableDropDownItem} from './components/toolbar/InsertDropDown/InsertTableDropDownItem.svelte';
 // dialogs
 export {default as InsertImageDialog} from './components/toolbar/dialogs/InsertImageDialog.svelte';
-export {
-  default as InsertImageUploadedDialogBody,
-} from './components/toolbar/dialogs/InsertImageUploadedDialogBody.svelte';
+export {default as InsertImageUploadedDialogBody} from './components/toolbar/dialogs/InsertImageUploadedDialogBody.svelte';
 export {default as InsertImageUriDialogBody} from './components/toolbar/dialogs/InsertImageUriDialogBody.svelte';
 export {default as InsertColumnsDialog} from './components/toolbar/dialogs/InsertColumnsDialog.svelte';
 export {default as InsertTableDialog} from './components/toolbar/dialogs/InsertTableDialog.svelte';
@@ -127,9 +127,6 @@ export type {ImagePayload} from './core/plugins/Image/ImageNode.js';
 export {getEditor, getActiveEditor} from './core/composerContext.js';
 
 export {default as ActionBar} from './components/actionbar/ActionBar.svelte';
-export {default as ImportButton} from './components/actionbar/ImportButton.svelte';
-export {default as ExportButton} from './components/actionbar/ExportButton.svelte';
-export {default as ReadonlyButton} from './components/actionbar/ReadonlyButton.svelte';
 export {default as TreeViewPlugin} from './core/plugins/TreeView/TreeViewPlugin.svelte';
 
 export {default as ContentEditable} from './core/ContentEditable.svelte';
@@ -142,11 +139,6 @@ export {$createParagraphNode, $createTextNode, $getRoot} from 'lexical';
 export {$createHeadingNode, $createQuoteNode} from '@lexical/rich-text';
 export {$createLinkNode} from '@lexical/link';
 export {$createListItemNode, $createListNode} from '@lexical/list';
-export {
-  $convertToMarkdownString as convertToMarkdownString,
-  $convertFromMarkdownString as convertFromMarkdownString,
-} from '@lexical/markdown';
-
 
 // ui components
 export {default as DropDown} from './components/generic/dropdown/DropDown.svelte';

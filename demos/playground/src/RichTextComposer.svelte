@@ -43,6 +43,12 @@
     ColumnLayoutPlugin,
     LayoutContainerNode,
     LayoutItemNode,
+    TableNode,
+    TableCellNode,
+    TableRowNode,
+    TablePlugin,
+    TableHoverActionPlugin,
+    TableActionMenuPlugin,
   } from 'svelte-lexical';
   import {prepopulatedRichText} from './prepopulatedRichText';
   import type {SettingsStore} from './settings/setttingsStore';
@@ -68,8 +74,7 @@
 
   let isSmallWidthViewport = $state(true);
 
-  // svelte-ignore non_reactive_update
-  let editorDiv: HTMLDivElement | undefined;
+  let editorDiv: HTMLDivElement | undefined = $state();
 
   const initialConfig = {
     editorState: $settings.isCollab
@@ -93,6 +98,9 @@
       CodeHighlightNode,
       LayoutContainerNode,
       LayoutItemNode,
+      TableNode,
+      TableCellNode,
+      TableRowNode,
     ],
     onError: (error: Error) => {
       throw error;
@@ -135,11 +143,11 @@
       <KeywordPlugin {keywordsRegex} />
       <HashtagPlugin />
       <AutoLinkPlugin />
-      <MarkdownShortcutPlugin transformers={ALL_TRANSFORMERS} />
       <ColumnLayoutPlugin />
 
       {#if $settings.isRichText}
         <RichTextPlugin />
+
         {#if $settings.isCollab}
           <CollaborationPlugin
             id="main"
@@ -161,6 +169,10 @@
         </ImagePlugin>
         <LinkPlugin {validateUrl} />
         <CodeHighlightPlugin />
+        <MarkdownShortcutPlugin transformers={ALL_TRANSFORMERS} />
+        <TablePlugin />
+        <TableHoverActionPlugin anchorElem={editorDiv} />
+        <TableActionMenuPlugin anchorElem={editorDiv} cellMerge={true} />
         {#if !isSmallWidthViewport}
           <FloatingLinkEditorPlugin anchorElem={editorDiv} />
           <CodeActionMenuPlugin anchorElem={editorDiv} />
