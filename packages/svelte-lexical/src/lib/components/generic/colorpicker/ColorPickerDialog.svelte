@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {getCommands} from '$lib/core/commands.js';
+  import {FocusEditor} from '$lib/core/commands.js';
   import {getEditor} from '$lib/core/composerContext.js';
   import CloseCircleButton from '../../generic/button/CloseCircleButton.svelte';
   import ModalDialog from '../../generic/dialog/ModalDialog.svelte';
@@ -18,21 +18,26 @@
   }
 
   let {color, title, showModal = $bindable(false)}: Props = $props();
-  export function open(onChangeCallback: (value: string) => void) {
+  export function open(
+    onChangeCallback: (value: string) => void,
+    initialColor?: string,
+  ) {
+    if (initialColor) {
+      color = initialColor;
+    }
     onChange = onChangeCallback;
     showModal = true;
   }
 
   function close() {
     showModal = false;
-    getCommands().FocusEditor.execute(editor);
+    FocusEditor(editor);
   }
 
   function onColorChange(value: string) {
     if (onChange) {
       onChange(value, true);
     }
-    close();
   }
 </script>
 

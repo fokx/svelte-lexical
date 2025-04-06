@@ -7,8 +7,6 @@
 
 <script lang="ts">
   import './ImageNodeStyles.css';
-  import {HashtagNode} from '@lexical/hashtag';
-  import {LinkNode} from '@lexical/link';
   import {
     $getSelection as getSelection,
     $isNodeSelection as isNodeSelection,
@@ -21,21 +19,14 @@
     COMMAND_PRIORITY_LOW,
     CLICK_COMMAND,
     DRAGSTART_COMMAND,
-    KEY_DELETE_COMMAND,
-    KEY_BACKSPACE_COMMAND,
     KEY_ESCAPE_COMMAND,
     KEY_ENTER_COMMAND,
-    LineBreakNode,
-    ParagraphNode,
-    RootNode,
     type BaseSelection,
-    TextNode,
   } from 'lexical';
   import {onMount} from 'svelte';
   import {mergeRegister} from '@lexical/utils';
   import ImageResizer from './ImageResizer.svelte';
   import {$isImageNode as isImageNode} from './ImageNode.js';
-  import {KeywordNode} from '../KeywordNode.js';
   import {
     clearSelection,
     createNodeSelectionStore,
@@ -45,7 +36,10 @@
   import RichTextPlugin from '../RichTextPlugin.svelte';
   import PlaceHolder from '../PlaceHolder.svelte';
   import AutoFocusPlugin from '../AutoFocusPlugin.svelte';
-  import {getImageHistoryPluginType} from '../../composerContext.js';
+  import {
+    getImageHistoryPluginType,
+    getIsEditable,
+  } from '../../composerContext.js';
   import {writable, type Writable} from 'svelte/store';
 
   interface Props {
@@ -86,11 +80,12 @@
   let isSelected = createNodeSelectionStore(editor, nodeKey);
   let isResizing = $state(false);
   let activeEditorRef: LexicalEditor;
+  let isEditable = getIsEditable();
 
   let draggable = $derived(
     $isSelected && isNodeSelection(selection) && !isResizing,
   );
-  let isFocused = $derived($isSelected || isResizing);
+  let isFocused = $derived(($isSelected || isResizing) && $isEditable);
 
   let promise = new Promise((resolve, reject) => {
     if (imageCache.has(src)) {
@@ -107,19 +102,6 @@
       };
     }
   });
-
-  const onDelete = (payload: KeyboardEvent) => {
-    if ($isSelected && isNodeSelection(getSelection())) {
-      const event: KeyboardEvent = payload;
-      event.preventDefault();
-      const node = getNodeByKey(nodeKey);
-      if (isImageNode(node)) {
-        node.remove();
-        return true;
-      }
-    }
-    return false;
-  };
 
   const onEnter = (event: KeyboardEvent) => {
     const latestSelection = getSelection();
@@ -193,12 +175,14 @@
   };
 
   onMount(() => {
-    let isMounted = true;
     const rootElement = editor.getRootElement();
     const unregister = mergeRegister(
       editor.registerUpdateListener(({editorState}) => {
-        if (isMounted) {
-          selection = editorState.read(() => getSelection());
+        const updatedSelection = editorState.read(() => getSelection());
+        if (isNodeSelection(updatedSelection)) {
+          selection = updatedSelection;
+        } else {
+          selection = null;
         }
       }),
       editor.registerCommand(
@@ -232,16 +216,6 @@
         },
         COMMAND_PRIORITY_LOW,
       ),
-      editor.registerCommand(
-        KEY_DELETE_COMMAND,
-        onDelete,
-        COMMAND_PRIORITY_LOW,
-      ),
-      editor.registerCommand(
-        KEY_BACKSPACE_COMMAND,
-        onDelete,
-        COMMAND_PRIORITY_LOW,
-      ),
       editor.registerCommand(KEY_ENTER_COMMAND, onEnter, COMMAND_PRIORITY_LOW),
       editor.registerCommand(
         KEY_ESCAPE_COMMAND,
@@ -253,7 +227,6 @@
     rootElement?.addEventListener('contextmenu', onRightClick);
 
     return () => {
-      isMounted = false;
       unregister();
       rootElement?.removeEventListener('contextmenu', onRightClick);
     };
@@ -314,18 +287,7 @@
 </div>
 {#if showCaption}
   <div class="image-caption-container">
-    <NestedComposer
-      initialEditor={caption}
-      parentEditor={editor}
-      initialNodes={[
-        RootNode,
-        TextNode,
-        LineBreakNode,
-        ParagraphNode,
-        LinkNode,
-        HashtagNode,
-        KeywordNode,
-      ]}>
+    <NestedComposer initialEditor={caption} parentEditor={editor}>
       <AutoFocusPlugin />
 
       <!-- {#if isCollabActive}

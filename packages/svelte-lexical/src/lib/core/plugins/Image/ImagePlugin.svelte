@@ -9,9 +9,6 @@
   export const INSERT_IMAGE_COMMAND: LexicalCommand<InsertImagePayload> =
     createCommand();
   export type InsertImagePayload = ImagePayload;
-
-  const getDOMSelection = (targetWindow: Window | null): Selection | null =>
-    CAN_USE_DOM ? (targetWindow || window).getSelection() : null;
 </script>
 
 <script lang="ts">
@@ -32,9 +29,11 @@
     DROP_COMMAND,
     type LexicalCommand,
     type LexicalEditor,
+    getDOMSelectionFromTarget,
   } from 'lexical';
   import {
     $wrapNodeInElement as wrapNodeInElement,
+    isHTMLElement,
     mergeRegister,
   } from '@lexical/utils';
 
@@ -46,7 +45,6 @@
     type ImagePayload,
   } from './ImageNode.js';
   import {getEditor} from '../../composerContext.js';
-  import {CAN_USE_DOM} from '../../../environment/canUseDOM.js';
 
   const editor: LexicalEditor = getEditor();
 
@@ -199,24 +197,16 @@
   function canDropImage(event: DragEvent): boolean {
     const target = event.target;
     return !!(
-      target &&
-      target instanceof HTMLElement &&
+      isHTMLElement(target) &&
       !target.closest('code, span.editor-image') &&
-      target.parentElement &&
+      isHTMLElement(target.parentElement) &&
       target.parentElement.closest('div.ContentEditable__root')
     );
   }
 
   function getDragSelection(event: DragEvent): Range | null | undefined {
     let range;
-    const target = event.target as null | Element | Document;
-    const targetWindow =
-      target == null
-        ? null
-        : target.nodeType === 9
-          ? (target as Document).defaultView
-          : (target as Element).ownerDocument.defaultView;
-    const domSelection = getDOMSelection(targetWindow);
+    const domSelection = getDOMSelectionFromTarget(event.target);
     if (document.caretRangeFromPoint) {
       range = document.caretRangeFromPoint(event.clientX, event.clientY);
     } else if (event.rangeParent && domSelection !== null) {

@@ -1,10 +1,10 @@
 <script lang="ts">
   import {getActiveEditor} from '$lib/core/composerContext.js';
-  import {getCommands} from '$lib/core/commands.js';
+  import {FocusEditor} from '$lib/core/commands.js';
   import {getEditor} from '$lib/core/composerContext.js';
   import CloseCircleButton from '../../generic/button/CloseCircleButton.svelte';
   import ModalDialog from '../../generic/dialog/ModalDialog.svelte';
-  import {INSERT_LAYOUT_COMMAND} from '../../../core/plugins/ColumnsLayout/LayoutItemNode.js';
+  import {INSERT_LAYOUT_COMMAND} from '$lib/core/plugins/ColumnsLayout/LayoutItemNode.js';
   import DropDownItem from '../../generic/dropdown/DropDownItem.svelte';
   import DropDown from '../../generic/dropdown/DropDown.svelte';
   import {tick} from 'svelte';
@@ -24,7 +24,7 @@
   async function close() {
     showModal = false;
     await tick();
-    getCommands().FocusEditor.execute(editor);
+    FocusEditor(editor);
   }
 
   const LAYOUTS = [
@@ -41,19 +41,23 @@
     currentLabel = label;
     currentValue = value;
   };
+
+  let modalDiv = $state<HTMLDivElement | null>(null);
 </script>
 
 <ModalDialog bind:showModal stopPropagation={false}>
   <CloseCircleButton on:click={close} />
 
-  <div class="modal">
+  <div class="modal" bind:this={modalDiv}>
     <h2 class="Modal__title">Insert Columns Layout</h2>
     <div class="Modal__content">
       <DropDown
-        buttonClassName="toolbar-item spaced"
+        buttonClassName="toolbar-item dialog-dropdown"
         buttonLabel={currentLabel}
         buttonAriaLabel="Insert specialized editor node"
-        buttonIconClassName="">
+        buttonIconClassName=""
+        target={modalDiv}>
+        <!-- eslint-disable-next-line svelte/require-each-key -->
         {#each LAYOUTS as layout}
           <DropDownItem
             class={`item ${currentLabel === layout.label ? 'active dropdown-item-active' : ''}`}
@@ -65,7 +69,7 @@
         {/each}
       </DropDown>
 
-      <div class="ToolbarPlugin__dialogActions">
+      <div class="DialogActions">
         <button
           data-test-id="image-modal-file-upload-btn"
           class="Button__root"

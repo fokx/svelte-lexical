@@ -20,6 +20,7 @@
     $isElementNode as isElementNode,
     $isRangeSelection as isRangeSelection,
     COMMAND_PRIORITY_LOW,
+    getNearestEditorFromDOMNode,
     KEY_ARROW_DOWN_COMMAND,
     KEY_ARROW_LEFT_COMMAND,
     KEY_ARROW_UP_COMMAND,
@@ -159,7 +160,7 @@
   function handleCheckItemEvent(event: PointerEvent, callback: () => void) {
     const target = event.target;
 
-    if (target === null || !isHTMLElement(target)) {
+    if (!isHTMLElement(target)) {
       return;
     }
 
@@ -167,7 +168,6 @@
     const firstChild = target.firstChild;
 
     if (
-      firstChild != null &&
       isHTMLElement(firstChild) &&
       (firstChild.tagName === 'UL' || firstChild.tagName === 'OL')
     ) {
@@ -194,20 +194,22 @@
 
   function handleClick(event: Event) {
     handleCheckItemEvent(event as PointerEvent, () => {
-      const domNode = event.target as HTMLElement;
-      const editor = findEditor(domNode);
+      if (isHTMLElement(event.target)) {
+        const domNode = event.target as HTMLElement;
+        const editor = getNearestEditorFromDOMNode(domNode);
 
-      if (editor != null && editor.isEditable()) {
-        editor.update(() => {
-          if (event.target) {
-            const node = getNearestNodeFromDOMNode(domNode);
+        if (editor != null && editor.isEditable()) {
+          editor.update(() => {
+            if (event.target) {
+              const node = getNearestNodeFromDOMNode(domNode);
 
-            if (isListItemNode(node)) {
-              domNode.focus();
-              node.toggleChecked();
+              if (isListItemNode(node)) {
+                domNode.focus();
+                node.toggleChecked();
+              }
             }
-          }
-        });
+          });
+        }
       }
     });
   }
@@ -219,27 +221,10 @@
     });
   }
 
-  function findEditor(target: Node) {
-    // eslint-disable-next-line no-undef
-    let node: ParentNode | Node | null = target;
-
-    while (node) {
-      // @ts-ignore internal field
-      if (node.__lexicalEditor) {
-        // @ts-ignore internal field
-        return node.__lexicalEditor;
-      }
-
-      node = node.parentNode;
-    }
-
-    return null;
-  }
-
   function getActiveCheckListItem(): HTMLElement | null {
-    const activeElement = document.activeElement as HTMLElement;
+    const activeElement = document.activeElement;
 
-    return activeElement != null &&
+    return isHTMLElement(activeElement) &&
       activeElement.tagName === 'LI' &&
       activeElement.parentNode != null &&
       // @ts-ignore internal field

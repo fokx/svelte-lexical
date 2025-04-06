@@ -40,7 +40,7 @@
     LayoutContainerNode,
     LayoutItemNode,
   } from '$lib/index.js';
-  import editorTheme from '$lib/themes/DefaultEditorTheme.js';
+  import {theme} from '$lib/themes/light-dark/editor/LightDarkEditorTheme.js';
   import {
     $getRoot as getRoot,
     $createTextNode as createTextNode,
@@ -52,12 +52,13 @@
   import {TableCellNode, TableNode, TableRowNode} from '@lexical/table';
   import TableHoverActionPlugin from '$lib/core/plugins/Table/TableHoverActionPlugin.svelte';
   import TableActionMenuPlugin from '$lib/core/plugins/Table/TableActionMenuPlugin.svelte';
+  import TableCellResizerPlugin from '$lib/core/plugins/Table/TableCellResizerPlugin.svelte';
 
   let isSmallWidthViewport = $state(true);
   let editorDiv: HTMLDivElement | undefined = $state();
 
   const initialConfig = {
-    theme: editorTheme,
+    theme: theme,
     namespace: 'pg_sveltekit',
     nodes: [
       HeadingNode,
@@ -117,7 +118,7 @@
 </script>
 
 <Composer {initialConfig}>
-  <div class="editor-shell">
+  <div class="editor-shell svelte-lexical">
     <RichTextToolbar />
     <div class="editor-container tree-view">
       <div class="editor-scroller">
@@ -148,8 +149,9 @@
           LINK,
         ]} />
       <ColumnLayoutPlugin />
-      <TablePlugin />
+      <TablePlugin hasHorizontalScroll={true} />
       <TableHoverActionPlugin anchorElem={editorDiv} />
+      <TableCellResizerPlugin />
       <TableActionMenuPlugin anchorElem={editorDiv} cellMerge={true} />
       <ActionBar />
     </div>

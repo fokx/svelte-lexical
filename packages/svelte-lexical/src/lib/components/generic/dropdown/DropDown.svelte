@@ -1,9 +1,10 @@
 <script lang="ts">
   import {run} from 'svelte/legacy';
 
-  import {CAN_USE_DOM} from '../../../environment/canUseDOM.js';
+  import {CAN_USE_DOM} from '$lib/environment/canUseDOM.js';
   import DropDownItems from './DropDownItems.svelte';
   import Portal from '../portal/Portal.svelte';
+  import {isDOMNode} from 'lexical';
 
   interface Props {
     disabled?: boolean;
@@ -13,6 +14,7 @@
     buttonLabel?: string | undefined;
     stopCloseOnClickSelf?: boolean;
     title?: string | undefined;
+    target?: HTMLElement;
     children?: import('svelte').Snippet;
   }
 
@@ -25,6 +27,7 @@
     stopCloseOnClickSelf = false,
     title = undefined,
     children,
+    target = undefined,
   }: Props = $props();
 
   let dropDownRef = $state<HTMLDivElement | undefined>();
@@ -51,10 +54,13 @@
 
   const handle = (event: MouseEvent) => {
     const target = event.target;
-    if (stopCloseOnClickSelf) {
-      if (dropDownRef && dropDownRef.contains(target as Node)) return;
+    if (!isDOMNode(target)) {
+      return;
     }
-    if (!buttonRef.contains(target as Node)) {
+    if (stopCloseOnClickSelf) {
+      if (dropDownRef && dropDownRef.contains(target)) return;
+    }
+    if (buttonRef && !buttonRef.contains(target)) {
       showDropDown = false;
     }
   };
@@ -88,7 +94,7 @@
 </button>
 
 {#if showDropDown}
-  <Portal>
+  <Portal {target}>
     <DropDownItems bind:dropDownRef onClose={handleClose}>
       {@render children?.()}
     </DropDownItems>

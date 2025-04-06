@@ -4,7 +4,7 @@
   import {getActiveEditor} from '$lib/core/composerContext.js';
   import {INSERT_TABLE_COMMAND} from '@lexical/table';
   import ModalDialog from '../../generic/dialog/ModalDialog.svelte';
-  import {getCommands} from '$lib/core/commands.js';
+  import {FocusEditor} from '$lib/core/commands.js';
   import NumberInput from '$lib/components/generic/input/NumberInput.svelte';
   import CloseCircleButton from '$lib/components/generic/button/CloseCircleButton.svelte';
   import {tick} from 'svelte';
@@ -37,7 +37,7 @@
   async function close() {
     showModal = false;
     await tick();
-    getCommands().FocusEditor.execute($activeEditor);
+    FocusEditor($activeEditor);
   }
 
   const onClick = () => {
@@ -56,12 +56,12 @@
     <h2 class="Modal__title">Insert Table</h2>
     <div class="Modal__content">
       <NumberInput
-        placeholder={'# of rows (1-500)'}
+        placeholder="# of rows (1-500)"
         label="Rows"
         bind:value={rows}
         dataTestId="table-modal-rows" />
       <NumberInput
-        placeholder={'# of columns (1-50)'}
+        placeholder="# of columns (1-50)"
         label="Columns"
         bind:value={columns}
         dataTestId="table-modal-columns" />

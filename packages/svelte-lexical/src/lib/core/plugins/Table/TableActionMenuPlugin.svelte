@@ -1,19 +1,31 @@
+<!-- eslint-disable-next-line svelte/no-unused-svelte-ignore -->
+<!--svelte-ignore state_referenced_locally -->
 <script lang="ts">
   import {run} from 'svelte/legacy';
 
   import {
+    $getTableNodeFromLexicalNodeOrThrow as getTableNodeFromLexicalNodeOrThrow,
     $getTableCellNodeFromLexicalNode as getTableCellNodeFromLexicalNode,
+    getTableElement,
     TableCellNode,
+    TableObserver,
+    getTableObserverFromTableElement,
+    $isTableSelection as isTableSelection,
+    $isTableCellNode as isTableCellNode,
   } from '@lexical/table';
   import {
+    COMMAND_PRIORITY_CRITICAL,
     $getSelection as getSelection,
     $isRangeSelection as isRangeSelection,
+    SELECTION_CHANGE_COMMAND,
   } from 'lexical';
 
-  import {onMount} from 'svelte';
   import TableActionMenu from './TableActionMenu.svelte';
-  import {writable, type Writable} from 'svelte/store';
+  import {writable} from 'svelte/store';
   import {getEditor, getIsEditable} from '$lib/core/composerContext.js';
+  import {mergeRegister} from '@lexical/utils';
+  import ColorPickerDialog from '$lib/components/generic/colorpicker/ColorPickerDialog.svelte';
+  import {CAN_USE_DOM} from '$lib/environment/canUseDOM.js';
 
   interface Props {
     anchorElem: HTMLElement;
@@ -29,20 +41,56 @@
   let menuRootRef: HTMLButtonElement | null = $state(null);
   const isMenuOpen = writable(false);
 
-  const tableCellNode: Writable<TableCellNode | null> = writable(null);
+  let tableCellNode = $state<TableCellNode | null>(null);
+
+  const checkTableCellOverflow = (
+    tableCellParentNodeDOM: HTMLElement,
+  ): boolean => {
+    const scrollableContainer = tableCellParentNodeDOM.closest(
+      '.PlaygroundEditorTheme__tableScrollableWrapper',
+    );
+    if (scrollableContainer) {
+      const containerRect = (
+        scrollableContainer as HTMLElement
+      ).getBoundingClientRect();
+      const cellRect = tableCellParentNodeDOM.getBoundingClientRect();
+
+      // Calculate where the action button would be positioned (5px from right edge of cell)
+      // Also account for the button width and table cell padding (8px)
+      const actionButtonRight = cellRect.right - 5;
+      const actionButtonLeft = actionButtonRight - 28; // 20px width + 8px padding
+
+      // Only hide if the action button would overflow the container
+      if (
+        actionButtonRight > containerRect.right ||
+        actionButtonLeft < containerRect.left
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   const moveMenu = () => {
     const menu = menuButtonRef;
     const selection = getSelection();
     const nativeSelection = window.getSelection();
     const activeElement = document.activeElement;
+    function disable() {
+      if (menu) {
+        menu.classList.remove('table-cell-action-button-container--active');
+        menu.classList.add('table-cell-action-button-container--inactive');
+      }
+      tableCellNode = null;
+    }
 
     if (selection == null || menu == null) {
-      $tableCellNode = null;
-      return;
+      return disable();
     }
 
     const rootElement = editor.getRootElement();
+    let tableObserver: TableObserver | null = null;
+    let tableCellParentNodeDOM: HTMLElement | null = null;
 
     if (
       isRangeSelection(selection) &&
@@ -55,71 +103,137 @@
       );
 
       if (tableCellNodeFromSelection == null) {
-        $tableCellNode = null;
-        return;
+        return disable();
       }
 
-      const tableCellParentNodeDOM = editor.getElementByKey(
+      tableCellParentNodeDOM = editor.getElementByKey(
         tableCellNodeFromSelection.getKey(),
       );
 
-      if (tableCellParentNodeDOM == null) {
-        $tableCellNode = null;
-        return;
+      if (
+        tableCellParentNodeDOM == null ||
+        !tableCellNodeFromSelection.isAttached()
+      ) {
+        return disable();
       }
 
-      $tableCellNode = tableCellNodeFromSelection;
+      if (checkTableCellOverflow(tableCellParentNodeDOM)) {
+        return disable();
+      }
+
+      const tableNode = getTableNodeFromLexicalNodeOrThrow(
+        tableCellNodeFromSelection,
+      );
+      const tableElement = getTableElement(
+        tableNode,
+        editor.getElementByKey(tableNode.getKey()),
+      );
+
+      if (!tableElement) {
+        throw new Error('Expected to find tableElement in DOM');
+      }
+
+      tableObserver = getTableObserverFromTableElement(tableElement);
+      tableCellNode = tableCellNodeFromSelection;
+    } else if (isTableSelection(selection)) {
+      const anchorNode = getTableCellNodeFromLexicalNode(
+        selection.anchor.getNode(),
+      );
+      if (!isTableCellNode(anchorNode)) {
+        throw new Error('TableSelection anchorNode must be a TableCellNode');
+      }
+      const tableNode = getTableNodeFromLexicalNodeOrThrow(anchorNode);
+      const tableElement = getTableElement(
+        tableNode,
+        editor.getElementByKey(tableNode.getKey()),
+      );
+      if (!tableElement) {
+        throw new Error('Expected to find tableElement in DOM');
+      }
+      tableObserver = getTableObserverFromTableElement(tableElement);
+      tableCellParentNodeDOM = editor.getElementByKey(anchorNode.getKey());
+
+      if (tableCellParentNodeDOM === null) {
+        return disable();
+      }
+
+      if (checkTableCellOverflow(tableCellParentNodeDOM)) {
+        return disable();
+      }
     } else if (!activeElement) {
-      $tableCellNode = null;
+      return disable();
+    }
+    if (tableObserver === null || tableCellParentNodeDOM === null) {
+      return disable();
+    }
+    const enabled = !tableObserver || !tableObserver.isSelecting;
+    menu.classList.toggle(
+      'table-cell-action-button-container--active',
+      enabled,
+    );
+    menu.classList.toggle(
+      'table-cell-action-button-container--inactive',
+      !enabled,
+    );
+    if (enabled) {
+      const tableCellRect = tableCellParentNodeDOM.getBoundingClientRect();
+      const anchorRect = anchorElem.getBoundingClientRect();
+      const top = tableCellRect.top - anchorRect.top;
+      const left = tableCellRect.right - anchorRect.left;
+      menu.style.transform = `translate(${left}px, ${top}px)`;
     }
   };
 
-  onMount(() => {
-    return editor.registerUpdateListener(() => {
-      editor.getEditorState().read(() => {
-        moveMenu();
-      });
-    });
-  });
-
-  run(() => {
-    const menuButtonDOM = menuButtonRef as HTMLButtonElement | null;
-
-    if (menuButtonDOM != null && $tableCellNode != null) {
-      const tableCellNodeDOM = editor.getElementByKey($tableCellNode.getKey());
-
-      if (tableCellNodeDOM != null) {
-        const tableCellRect = tableCellNodeDOM.getBoundingClientRect();
-        const menuRect = menuButtonDOM.getBoundingClientRect();
-        const anchorRect = anchorElem.getBoundingClientRect();
-
-        const top = tableCellRect.top - anchorRect.top + 4;
-        const left =
-          tableCellRect.right - menuRect.width - 10 - anchorRect.left;
-
-        menuButtonDOM.style.opacity = '1';
-        menuButtonDOM.style.transform = `translate(${left}px, ${top}px)`;
-      } else {
-        menuButtonDOM.style.opacity = '0';
-        menuButtonDOM.style.transform = 'translate(-10000px, -10000px)';
+  $effect(() => {
+    // We call the $moveMenu callback every time the selection changes,
+    // once up front, and once after each pointerup
+    let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
+    const callback = () => {
+      timeoutId = undefined;
+      editor.getEditorState().read(moveMenu);
+    };
+    const delayedCallback = () => {
+      if (timeoutId === undefined) {
+        timeoutId = setTimeout(callback, 0);
       }
-    }
+      return false;
+    };
+    return mergeRegister(
+      editor.registerUpdateListener(delayedCallback),
+      editor.registerCommand(
+        SELECTION_CHANGE_COMMAND,
+        delayedCallback,
+        COMMAND_PRIORITY_CRITICAL,
+      ),
+      editor.registerRootListener((rootElement, prevRootElement) => {
+        if (prevRootElement) {
+          prevRootElement.removeEventListener('pointerup', delayedCallback);
+        }
+        if (rootElement) {
+          rootElement.addEventListener('pointerup', delayedCallback);
+          delayedCallback();
+        }
+      }),
+      () => clearTimeout(timeoutId),
+    );
   });
 
-  let prevTableCellDOM = $state($tableCellNode);
+  let prevTableCellDOM = $state(tableCellNode);
 
   run(() => {
-    if (prevTableCellDOM !== $tableCellNode) {
+    if (prevTableCellDOM !== tableCellNode) {
       $isMenuOpen = false;
     }
 
-    prevTableCellDOM = $tableCellNode;
+    prevTableCellDOM = tableCellNode;
   });
+
+  let colorPicker = $state() as ColorPickerDialog;
 </script>
 
 {#if $isEditable}
   <div class="table-cell-action-button-container" bind:this={menuButtonRef}>
-    {#if $tableCellNode != null}
+    {#if tableCellNode != null}
       <!-- svelte-ignore a11y_consider_explicit_label -->
       <button
         type="button"
@@ -136,9 +250,16 @@
           contextRef={menuRootRef}
           setIsMenuOpen={(val) => ($isMenuOpen = val)}
           onClose={() => ($isMenuOpen = false)}
-          _tableCellNode={$tableCellNode}
-          {cellMerge} />
+          _tableCellNode={tableCellNode}
+          {cellMerge}
+          {colorPicker} />
       {/if}
     {/if}
   </div>
+  {#if CAN_USE_DOM}
+    <ColorPickerDialog
+      title="Cell background color"
+      color="white"
+      bind:this={colorPicker} />
+  {/if}
 {/if}

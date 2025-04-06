@@ -34,7 +34,9 @@ import {
 import path from 'node:path';
 
 test.describe('Images', () => {
-  test.beforeEach(({isCollab, page}) => initialize({isCollab, page}));
+  test.beforeEach(({isCollab, page, browserName}) =>
+    initialize({isCollab, page, browserName}),
+  );
   test(`Can create a decorator and move selection around it`, async ({
     page,
     isPlainText,
@@ -608,7 +610,10 @@ test.describe('Images', () => {
       page,
       'span[data-lexical-text="true"]',
     );
-    await dragMouse(page, textBoundingBox, textBoundingBox, 'start', 'middle');
+    await dragMouse(page, textBoundingBox, textBoundingBox, {
+      positionEnd: 'middle',
+      positionStart: 'start',
+    });
 
     const lexicalSelection = await evaluate(page, (editor) => {
       return window.lexicalEditor._editorState._selection;

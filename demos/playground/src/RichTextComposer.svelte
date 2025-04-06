@@ -49,6 +49,7 @@
     TablePlugin,
     TableHoverActionPlugin,
     TableActionMenuPlugin,
+    TableCellResizerPlugin,
   } from 'svelte-lexical';
   import {prepopulatedRichText} from './prepopulatedRichText';
   import type {SettingsStore} from './settings/settingsStore';
@@ -170,8 +171,9 @@
         <LinkPlugin {validateUrl} />
         <CodeHighlightPlugin />
         <MarkdownShortcutPlugin transformers={ALL_TRANSFORMERS} />
-        <TablePlugin />
+        <TablePlugin hasHorizontalScroll={$settings.tableHorizontalScroll} />
         <TableHoverActionPlugin anchorElem={editorDiv} />
+        <TableCellResizerPlugin />
         <TableActionMenuPlugin anchorElem={editorDiv} cellMerge={true} />
         {#if !isSmallWidthViewport}
           <FloatingLinkEditorPlugin anchorElem={editorDiv} />

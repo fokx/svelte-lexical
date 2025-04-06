@@ -36,7 +36,7 @@
     HorizontalRuleNode,
     ImageNode,
   } from '$lib/index.js';
-  import editorTheme from '$lib/themes/DefaultEditorTheme.js';
+  import {theme as editorTheme} from '$lib/themes/light-dark/editor/LightDarkEditorTheme.js';
   import {
     $getRoot as getRoot,
     $createTextNode as createTextNode,
@@ -104,7 +104,7 @@
 </script>
 
 <Composer {initialConfig}>
-  <div class="editor-shell">
+  <div class="editor-shell svelte-lexical">
     <Composer5Toolbar />
     <div class="editor-container">
       <div class="editor-scroller">

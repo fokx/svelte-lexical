@@ -9,6 +9,7 @@
 import {expect, test as base} from '@playwright/test';
 import {randomUUID} from 'node:crypto';
 import prettier from 'prettier';
+import * as lockfile from 'proper-lockfile';
 import {URLSearchParams} from 'url';
 
 import {selectAll} from '../keyboardShortcuts/index.mjs';
@@ -24,6 +25,8 @@ export const IS_COLLAB =
 const IS_RICH_TEXT = process.env.E2E_EDITOR_MODE !== 'plain-text';
 const IS_PLAIN_TEXT = process.env.E2E_EDITOR_MODE === 'plain-text';
 export const LEGACY_EVENTS = process.env.E2E_EVENTS_MODE === 'legacy-events';
+export const IS_TABLE_HORIZONTAL_SCROLL =
+  process.env.E2E_TABLE_MODE !== 'legacy' && false;
 export const SAMPLE_IMAGE_URL =
   E2E_PORT === 5173
     ? '/src/images/yellow-flower.jpg'
@@ -44,6 +47,21 @@ function wrapAndSlowDown(method, delay) {
   };
 }
 
+export function wrapTableHtml(expected, {ignoreClasses = false} = {}) {
+  return html`
+    ${expected
+      .replace(
+        /<table/g,
+        `<div${
+          ignoreClasses
+            ? ''
+            : ' class="PlaygroundEditorTheme__tableScrollableWrapper"'
+        }><table`,
+      )
+      .replace(/<\/table>/g, '</table></div>')}
+  `;
+}
+
 export async function initialize({
   page,
   isCollab,
@@ -55,6 +73,8 @@ export async function initialize({
   tableCellMerge,
   tableCellBackgroundColor,
   shouldUseLexicalContextMenu,
+  tableHorizontalScroll,
+  browserName,
 }) {
   // Tests with legacy events often fail to register keypress, so
   // slowing it down to reduce flakiness
@@ -67,6 +87,8 @@ export async function initialize({
   appSettings.isRichText = IS_RICH_TEXT;
   appSettings.emptyEditor = true;
   appSettings.disableBeforeInput = LEGACY_EVENTS;
+  appSettings.tableHorizontalScroll =
+    tableHorizontalScroll ?? IS_TABLE_HORIZONTAL_SCROLL;
   if (isCollab) {
     appSettings.isCollab = isCollab;
     appSettings.collabId = randomUUID();
@@ -85,6 +107,10 @@ export async function initialize({
     appSettings.tableCellBackgroundColor = tableCellBackgroundColor;
   }
   appSettings.shouldUseLexicalContextMenu = !!shouldUseLexicalContextMenu;
+
+  if (browserName) {
+    process.env.E2E_BROWSER = browserName;
+  }
 
   const urlParams = appSettingsToURLParams(appSettings);
   const url = `http://localhost:${E2E_PORT}/${
@@ -164,6 +190,16 @@ export async function clickSelectors(page, selectors) {
     await click(page, selectors[i]);
   }
 }
+
+function removeSafariLinebreakImgHack(actualHtml) {
+  return process.env.E2E_BROWSER === 'webkit'
+    ? actualHtml.replaceAll(
+        /<img (?:[^>]+ )?data-lexical-linebreak="true"(?: [^>]+)?>/g,
+        '',
+      )
+    : actualHtml;
+}
+
 /**
  * @param {import('@playwright/test').Page | import('@playwright/test').Frame} pageOrFrame
  */
@@ -180,22 +216,42 @@ async function assertHTMLOnPageOrFrame(
     ignoreInlineStyles,
   });
   return await expect(async () => {
-    const actualHtml = await pageOrFrame
-      .locator('div[contenteditable="true"]')
-      .first()
-      .innerHTML();
+    const actualHtml = removeSafariLinebreakImgHack(
+      await pageOrFrame
+        .locator('div[contenteditable="true"]')
+        .first()
+        .innerHTML(),
+    );
     let actual = await prettifyHTML(actualHtml.replace(/\n/gm, ''), {
       ignoreClasses,
       ignoreInlineStyles,
     });
 
-    actual = actualHtmlModificationsCallback(actual);
+    actual = await actualHtmlModificationsCallback(actual);
 
     expect(
       actual,
       `innerHTML of contenteditable in ${frameName} did not match`,
     ).toEqual(expected);
   }).toPass({intervals: [100, 250, 500], timeout: 5000});
+}
+
+/**
+ * @function
+ * @template T
+ * @param {() => T | Promise<T>}
+ * @returns {Promise<T>}
+ */
+export async function withExclusiveClipboardAccess(f) {
+  const release = await lockfile.lock('.', {
+    lockfilePath: '.playwright-clipboard.lock',
+    retries: 5,
+  });
+  try {
+    return f();
+  } finally {
+    await release();
+  }
 }
 
 /**
@@ -237,6 +293,29 @@ export async function assertHTML(
       actualHtmlModificationsCallback,
     );
   }
+}
+
+/**
+ * @param {import('@playwright/test').Page} page
+ */
+export async function assertTableHTML(
+  page,
+  expectedHtml,
+  expectedHtmlFrameRight = undefined,
+  options = undefined,
+  ...args
+) {
+  return await assertHTML(
+    page,
+    IS_TABLE_HORIZONTAL_SCROLL
+      ? wrapTableHtml(expectedHtml, options)
+      : expectedHtml,
+    IS_TABLE_HORIZONTAL_SCROLL && expectedHtmlFrameRight !== undefined
+      ? wrapTableHtml(expectedHtmlFrameRight, options)
+      : expectedHtmlFrameRight,
+    options,
+    ...args,
+  );
 }
 
 /**
@@ -309,16 +388,33 @@ async function assertSelectionOnPageOrFrame(page, expected) {
       return path.reverse();
     };
 
+    const fixOffset = (node, offset) => {
+      // If the selection offset is at the br of a webkit img+br linebreak
+      // then move the offset to the img so the tests are consistent across
+      // browsers
+      if (node && node.nodeType === Node.ELEMENT_NODE && offset > 0) {
+        const child = node.children[offset - 1];
+        if (
+          child &&
+          child.nodeType === Node.ELEMENT_NODE &&
+          child.getAttribute('data-lexical-linebreak') === 'true'
+        ) {
+          return offset - 1;
+        }
+      }
+      return offset;
+    };
+
     const {anchorNode, anchorOffset, focusNode, focusOffset} =
       window.getSelection();
 
     return {
-      anchorOffset,
+      anchorOffset: fixOffset(anchorNode, anchorOffset),
       anchorPath: getPathFromNode(anchorNode),
-      focusOffset,
+      focusOffset: fixOffset(focusNode, focusOffset),
       focusPath: getPathFromNode(focusNode),
     };
-  }, expected);
+  });
   expect(selection.anchorPath).toEqual(expected.anchorPath);
   expect(selection.focusPath).toEqual(expected.focusPath);
   if (Array.isArray(expected.anchorOffset)) {
@@ -646,11 +742,15 @@ export async function dragMouse(
   page,
   fromBoundingBox,
   toBoundingBox,
-  positionStart = 'middle',
-  positionEnd = 'middle',
-  mouseUp = true,
-  slow = false,
+  opts = {},
 ) {
+  const {
+    positionStart = 'middle',
+    positionEnd = 'middle',
+    mouseDown = true,
+    mouseUp = true,
+    slow = false,
+  } = opts;
   let fromX = fromBoundingBox.x;
   let fromY = fromBoundingBox.y;
   if (positionStart === 'middle') {
@@ -660,9 +760,6 @@ export async function dragMouse(
     fromX += fromBoundingBox.width;
     fromY += fromBoundingBox.height;
   }
-  await page.mouse.move(fromX, fromY);
-  await page.mouse.down();
-
   let toX = toBoundingBox.x;
   let toY = toBoundingBox.y;
   if (positionEnd === 'middle') {
@@ -673,13 +770,11 @@ export async function dragMouse(
     toY += toBoundingBox.height;
   }
 
-  if (slow) {
-    //simulate more than 1 mouse move event to replicate human slow dragging
-    await page.mouse.move((fromX + toX) / 2, (fromY + toY) / 2);
+  await page.mouse.move(fromX, fromY);
+  if (mouseDown) {
+    await page.mouse.down();
   }
-
-  await page.mouse.move(toX, toY);
-
+  await page.mouse.move(toX, toY, slow ? 10 : 1);
   if (mouseUp) {
     await page.mouse.up();
   }
@@ -695,12 +790,14 @@ export async function dragImage(
     page,
     await selectorBoundingBox(page, '.editor-image img'),
     await selectorBoundingBox(page, toSelector),
-    positionStart,
-    positionEnd,
+    {positionEnd, positionStart},
   );
 }
 
-export function prettifyHTML(string, {ignoreClasses, ignoreInlineStyles} = {}) {
+export async function prettifyHTML(
+  string,
+  {ignoreClasses, ignoreInlineStyles} = {},
+) {
   let output = string;
 
   if (ignoreClasses) {
@@ -718,11 +815,11 @@ export function prettifyHTML(string, {ignoreClasses, ignoreInlineStyles} = {}) {
 
   output = output.replace(/\s__playwright_target__="[^"]+"/, '');
 
-  return prettier.format(output, {
+  return await prettier.format(output, {
     plugins: ['prettier-plugin-organize-attributes'],
     pluginSearchDirs: ['../../../../'],
     attributeGroups: ['$DEFAULT', '^data-'],
-    attributeSort: 'ASC',
+    attributeSort: 'asc',
     bracketSameLine: true,
     htmlWhitespaceSensitivity: 'ignore',
     parser: 'html',
@@ -752,12 +849,12 @@ export async function selectFromAdditionalStylesDropdown(page, selector) {
 
 export async function selectFromBackgroundColorPicker(page) {
   await click(page, '.toolbar-item[aria-label="Formatting background color"]');
-  await click(page, '.color-picker-basic-color button:first-child'); //Defaulted to red
+  await click(page, '.dropdown .color-picker-basic-color button:first-child'); //Defaulted to red
 }
 
 export async function selectFromColorPicker(page) {
   await click(page, '.toolbar-item[aria-label="Formatting text color"]');
-  await click(page, '.color-picker-basic-color button:first-child'); //Defaulted to red
+  await click(page, '.dropdown .color-picker-basic-color button:first-child'); //Defaulted to red
 }
 export async function selectFromFormatDropdown(page, selector) {
   await click(
@@ -824,82 +921,90 @@ export async function selectCellsFromTableCords(
   }
 
   const firstRowFirstColumnCell = await leftFrame.locator(
-    `table:first-of-type > tr:nth-child(${firstCords.y + 1}) > ${
+    `table:first-of-type > :nth-match(tr, ${firstCords.y + 1}) > ${
       isFirstHeader ? 'th' : 'td'
     }:nth-child(${firstCords.x + 1})`,
   );
   const secondRowSecondCell = await leftFrame.locator(
-    `table:first-of-type > tr:nth-child(${secondCords.y + 1}) > ${
+    `table:first-of-type > :nth-match(tr, ${secondCords.y + 1}) > ${
       isSecondHeader ? 'th' : 'td'
     }:nth-child(${secondCords.x + 1})`,
   );
 
-  // Focus on inside the iFrame or the boundingBox() below returns null.
   await firstRowFirstColumnCell.click();
+  await page.keyboard.down('Shift');
+  await secondRowSecondCell.click();
+  await page.keyboard.up('Shift');
 
-  await dragMouse(
+  // const firstBox = await firstRowFirstColumnCell.boundingBox();
+  // const secondBox = await secondRowSecondCell.boundingBox();
+  // await dragMouse(page, firstBox, secondBox, {slow: true});
+}
+
+export async function clickTableCellActiveButton(page) {
+  await click(
     page,
-    await firstRowFirstColumnCell.boundingBox(),
-    await secondRowSecondCell.boundingBox(),
-    'middle',
-    'middle',
-    true,
-    true,
+    '.table-cell-action-button-container--active > .table-cell-action-button',
   );
 }
 
 export async function insertTableRowAbove(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-insert-row-above"]');
 }
 
 export async function insertTableRowBelow(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-insert-row-below"]');
 }
 
 export async function insertTableColumnBefore(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-insert-column-before"]');
 }
 
 export async function insertTableColumnAfter(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-insert-column-after"]');
 }
 
 export async function mergeTableCells(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-merge-cells"]');
 }
 
 export async function unmergeTableCell(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-unmerge-cells"]');
 }
 
 export async function toggleColumnHeader(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-column-header"]');
 }
 
+export async function toggleRowHeader(page) {
+  await clickTableCellActiveButton(page);
+  await click(page, '.item[data-test-id="table-row-header"]');
+}
+
 export async function deleteTableRows(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-delete-rows"]');
 }
 
 export async function deleteTableColumns(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-delete-columns"]');
 }
 
 export async function deleteTable(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-delete"]');
 }
 
 export async function setBackgroundColor(page) {
-  await click(page, '.table-cell-action-button-container');
+  await clickTableCellActiveButton(page);
   await click(page, '.item[data-test-id="table-background-color"]');
 }
 
@@ -951,8 +1056,7 @@ export async function dragDraggableMenuTo(
     page,
     await selectorBoundingBox(page, '.draggable-block-menu'),
     await selectorBoundingBox(page, toSelector),
-    positionStart,
-    positionEnd,
+    {positionEnd, positionStart},
   );
 }
 
@@ -966,4 +1070,37 @@ export function getProjectRootPath() {
     return path.join('demos', 'playground');
   }
   return '';
+}
+
+/**
+ * Creates a selection object to assert against that is human readable and self-describing.
+ *
+ * Selections are composed of an anchorPath (the start) and a focusPath (the end).
+ * Once you traverse each path, you use the respective offsets to find the exact location of the cursor.
+ * So offsets are relative to their path. For example, if the anchorPath is [0, 1, 2] and the anchorOffset is 3,
+ * then the cursor is at the 4th character of the 3rd element of the 2nd element of the 1st element.
+ *
+ * @example
+ * const expectedSelection = createHumanReadableSelection('the full text of the last cell', {
+ *   anchorOffset: {desc: 'beginning of cell', value: 0},
+ *   anchorPath: [
+ *     {desc: 'index of table in root', value: 1},
+ *     {desc: 'first table row', value: 0},
+ *     {desc: 'first cell', value: 0},
+ *   ],
+ *   focusOffset: {desc: 'full text length', value: 9},
+ *   focusPath: [
+ *     {desc: 'index of last paragraph', value: 2},
+ *     {desc: 'index of first span', value: 0},
+ *     {desc: 'index of text block', value: 0},
+ *   ],
+ * });
+ */
+export function createHumanReadableSelection(_overview, dto) {
+  return {
+    anchorOffset: dto.anchorOffset.value,
+    anchorPath: dto.anchorPath.map((p) => p.value),
+    focusOffset: dto.focusOffset.value,
+    focusPath: dto.focusPath.map((p) => p.value),
+  };
 }

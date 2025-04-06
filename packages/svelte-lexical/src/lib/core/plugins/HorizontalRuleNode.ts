@@ -30,7 +30,7 @@ export class HorizontalRuleNode extends DecoratorNode<unknown> {
   static importJSON(
     serializedNode: SerializedHorizontalRuleNode,
   ): HorizontalRuleNode {
-    return $createHorizontalRuleNode();
+    return $createHorizontalRuleNode().updateFromJSON(serializedNode);
   }
 
   static importDOM(): DOMConversionMap | null {
@@ -47,13 +47,6 @@ export class HorizontalRuleNode extends DecoratorNode<unknown> {
    * `this.decorate` should also return null when skipDecorateRender is true
    */
   static skipDecorateRender = true;
-
-  exportJSON(): SerializedLexicalNode {
-    return {
-      type: 'horizontalrule',
-      version: 1,
-    };
-  }
 
   exportDOM(): DOMExportOutput {
     return {element: document.createElement('hr')};

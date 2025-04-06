@@ -5,15 +5,27 @@ import type {
   EditorConfig,
   LexicalEditor,
   LexicalNode,
+  LexicalUpdateJSON,
   NodeKey,
   SerializedEditor,
   SerializedLexicalNode,
   Spread,
 } from 'lexical';
 
-import {$applyNodeReplacement, createEditor, DecoratorNode} from 'lexical';
+import {
+  $applyNodeReplacement,
+  createEditor,
+  DecoratorNode,
+  LineBreakNode,
+  ParagraphNode,
+  RootNode,
+  TextNode,
+} from 'lexical';
 import type {ComponentProps} from 'svelte';
 import ImageComponent from './ImageComponent.svelte';
+import {LinkNode} from '@lexical/link';
+import {HashtagNode} from '@lexical/hashtag';
+import {KeywordNode} from '../KeywordNode.js';
 /*import * as React from 'react';
 import {Suspense} from 'react';*/
 
@@ -101,16 +113,20 @@ export class ImageNode extends DecoratorNode<DecoratorImageType> {
   }
 
   static importJSON(serializedNode: SerializedImageNode): ImageNode {
-    const {altText, height, width, maxWidth, caption, src, showCaption} =
-      serializedNode;
-    const node = $createImageNode({
+    const {altText, height, width, maxWidth, src, showCaption} = serializedNode;
+    return $createImageNode({
       altText,
       height,
       maxWidth,
       showCaption,
       src,
       width,
-    });
+    }).updateFromJSON(serializedNode);
+  }
+
+  updateFromJSON(serializedNode: LexicalUpdateJSON<SerializedImageNode>): this {
+    const node = super.updateFromJSON(serializedNode);
+    const {caption} = serializedNode;
     const nestedEditor = node.__caption;
     const editorState = nestedEditor.parseEditorState(caption.editorState);
     if (!editorState.isEmpty()) {
@@ -158,21 +174,29 @@ export class ImageNode extends DecoratorNode<DecoratorImageType> {
     this.__caption =
       caption ||
       createEditor({
-        nodes: [],
+        namespace: 'Playground/ImageNodeCaption',
+        nodes: [
+          RootNode,
+          TextNode,
+          LineBreakNode,
+          ParagraphNode,
+          LinkNode,
+          HashtagNode,
+          KeywordNode,
+        ],
       });
     this.__captionsEnabled = captionsEnabled || captionsEnabled === undefined;
   }
 
   exportJSON(): SerializedImageNode {
     return {
+      ...super.exportJSON(),
       altText: this.getAltText(),
       caption: this.__caption.toJSON(),
       height: this.__height === 'inherit' ? 0 : this.__height,
       maxWidth: this.__maxWidth,
       showCaption: this.__showCaption,
       src: this.getSrc(),
-      type: 'image',
-      version: 1,
       width: this.__width === 'inherit' ? 0 : this.__width,
     };
   }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type {Binding, Provider} from '@lexical/yjs';
+  import type {Binding, Provider, SyncCursorPositionsFn} from '@lexical/yjs';
   import type {LexicalEditor} from 'lexical';
 
   import {mergeRegister} from '@lexical/utils';
@@ -34,6 +34,7 @@
     cursorsContainerRef?: HTMLElement | null;
     initialEditorState?: InitialEditorStateType | null;
     awarenessData?: object | undefined;
+    syncCursorPositionsFn?: SyncCursorPositionsFn;
   }
 
   let {
@@ -48,6 +49,7 @@
     cursorsContainerRef = null,
     initialEditorState = null,
     awarenessData = undefined,
+    syncCursorPositionsFn = syncCursorPositions,
   }: Props = $props();
 
   let isReloadingDoc = false;
@@ -57,7 +59,7 @@
   //const binding = createBinding(editor, provider, id, doc, docMap);
 
   const connect = () => {
-    provider.connect();
+    return provider.connect();
   };
 
   const disconnect = () => {
@@ -91,7 +93,7 @@
     };
 
     const onAwarenessUpdate = () => {
-      syncCursorPositions(binding, provider);
+      syncCursorPositionsFn(binding, provider);
     };
 
     const onYjsTreeChanges = (
@@ -103,7 +105,13 @@
       const origin = transaction.origin;
       if (origin !== binding) {
         const isFromUndoManger = origin instanceof UndoManager;
-        syncYjsChangesToLexical(binding, provider, events, isFromUndoManger);
+        syncYjsChangesToLexical(
+          binding,
+          provider,
+          events,
+          isFromUndoManger,
+          syncCursorPositionsFn,
+        );
       }
     };
 
@@ -151,11 +159,22 @@
         }
       },
     );
-    connect();
+    const connectionPromise = connect();
 
     return () => {
       if (isReloadingDoc === false) {
-        disconnect();
+        if (connectionPromise) {
+          connectionPromise.then(disconnect);
+        } else {
+          // Workaround for race condition in StrictMode. It's possible there
+          // is a different race for the above case where connect returns a
+          // promise, but we don't have an example of that in-repo.
+          // It's possible that there is a similar issue with
+          // TOGGLE_CONNECT_COMMAND below when the provider connect returns a
+          // promise.
+          // https://github.com/facebook/lexical/issues/6640
+          disconnect();
+        }
       }
 
       provider.off('sync', onSync);
@@ -188,18 +207,16 @@
       editor.registerCommand(
         TOGGLE_CONNECT_COMMAND,
         (payload) => {
-          if (connect !== undefined && disconnect !== undefined) {
-            const shouldConnect = payload;
+          const shouldConnect = payload;
 
-            if (shouldConnect) {
-              // eslint-disable-next-line no-console
-              console.log('Collaboration connected!');
-              connect();
-            } else {
-              // eslint-disable-next-line no-console
-              console.log('Collaboration disconnected!');
-              disconnect();
-            }
+          if (shouldConnect) {
+            // eslint-disable-next-line no-console
+            console.log('Collaboration connected!');
+            connect();
+          } else {
+            // eslint-disable-next-line no-console
+            console.log('Collaboration disconnected!');
+            disconnect();
           }
 
           return true;

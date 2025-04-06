@@ -31,7 +31,12 @@ import {
 
 test.describe('Toolbar', () => {
   test.beforeEach(({isCollab, page}) =>
-    initialize({isCollab, page, showNestedEditorTreeView: false}),
+    initialize({
+      isCollab,
+      page,
+      showNestedEditorTreeView: false,
+      tableHorizontalScroll: false,
+    }),
   );
 
   test.fixme(
@@ -87,6 +92,7 @@ test.describe('Toolbar', () => {
                   contenteditable="true"
                   role="textbox"
                   spellcheck="true"
+                  aria-placeholder="Enter a caption..."
                   data-lexical-editor="true">
                   <p dir="ltr">
                     <span data-lexical-text="true">
@@ -156,6 +162,13 @@ test.describe('Toolbar', () => {
             <br />
           </p>
           <table>
+            <colgroup>
+              <col style="width: 92px" />
+              <col style="width: 92px" />
+              <col style="width: 92px" />
+              <col style="width: 92px" />
+              <col style="width: 92px" />
+            </colgroup>
             <tr>
               <th>
                 <p><br /></p>

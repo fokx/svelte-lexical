@@ -25,6 +25,7 @@ export {default as ColumnLayoutPlugin} from './core/plugins/ColumnsLayout/Column
 export {default as TablePlugin} from './core/plugins/Table/TablePlugin.svelte';
 export {default as TableActionMenuPlugin} from './core/plugins/Table/TableActionMenuPlugin.svelte';
 export {default as TableHoverActionPlugin} from './core/plugins/Table/TableHoverActionPlugin.svelte';
+export {default as TableCellResizerPlugin} from './core/plugins/Table/TableCellResizerPlugin.svelte';
 
 export {default as MarkdownShortcutPlugin} from './core/plugins/MardownShortcut/MarkdownShortcutPlugin.svelte';
 export {
@@ -115,6 +116,7 @@ export {default as SuperscriptDropDownItem} from './components/toolbar/MoreStyle
 export {default as ClearFormattingDropDownItem} from './components/toolbar/MoreStylesDropDown/ClearFormattingDropDownItem.svelte';
 export {default as InsertColumnLayoutDropDownItem} from './components/toolbar/InsertDropDown/InsertColumnLayoutDropDownItem.svelte';
 export {default as InsertTableDropDownItem} from './components/toolbar/InsertDropDown/InsertTableDropDownItem.svelte';
+export {default as ShortcutsPlugin} from './components/toolbar/ShortcutsPlugin.svelte';
 // dialogs
 export {default as InsertImageDialog} from './components/toolbar/dialogs/InsertImageDialog.svelte';
 export {default as InsertImageUploadedDialogBody} from './components/toolbar/dialogs/InsertImageUploadedDialogBody.svelte';
@@ -122,9 +124,30 @@ export {default as InsertImageUriDialogBody} from './components/toolbar/dialogs/
 export {default as InsertColumnsDialog} from './components/toolbar/dialogs/InsertColumnsDialog.svelte';
 export {default as InsertTableDialog} from './components/toolbar/dialogs/InsertTableDialog.svelte';
 
-export {getCommands} from './core/commands.js';
+// commands
 export type {ImagePayload} from './core/plugins/Image/ImageNode.js';
 export {getEditor, getActiveEditor} from './core/composerContext.js';
+export {
+  formatParagraph,
+  formatHeading,
+  formatBulletList,
+  formatCheckList,
+  formatNumberedList,
+  formatQuote,
+  formatCode,
+  clearFormatting,
+  InsertImage,
+  FocusEditor,
+} from './core/commands.js';
+export {
+  increaseFontSize,
+  decreaseFontSize,
+  updateFontSize,
+  MIN_ALLOWED_FONT_SIZE,
+  MAX_ALLOWED_FONT_SIZE,
+  DEFAULT_FONT_SIZE,
+} from './core/commands/updateFontSize.js';
+export {toggleBold} from './core/commands/toggleBold.js';
 
 export {default as ActionBar} from './components/actionbar/ActionBar.svelte';
 export {default as TreeViewPlugin} from './core/plugins/TreeView/TreeViewPlugin.svelte';
@@ -139,6 +162,11 @@ export {$createParagraphNode, $createTextNode, $getRoot} from 'lexical';
 export {$createHeadingNode, $createQuoteNode} from '@lexical/rich-text';
 export {$createLinkNode} from '@lexical/link';
 export {$createListItemNode, $createListNode} from '@lexical/list';
+export {$createCodeNode, $createCodeHighlightNode} from '@lexical/code';
+export {$createLayoutContainerNode} from './core/plugins/ColumnsLayout/LayoutContainerNode.js';
+export {$createHashtagNode} from './core/plugins/HashtagNode.js';
+export {$createKeywordNode} from './core/plugins/KeywordNode.js';
+export {$createImageNode} from './core/plugins/Image/ImageNode.js';
 
 // ui components
 export {default as DropDown} from './components/generic/dropdown/DropDown.svelte';
@@ -156,5 +184,8 @@ export {
 
 export {$getSelection} from 'lexical';
 
-// theme
-export {default as editorTheme} from './themes/DefaultEditorTheme.js';
+// commands
+export {$generateHtmlFromNodes as generateHtmlFromNodes} from '@lexical/html';
+export {$generateNodesFromDOM as generateNodesFromDOM} from '@lexical/html';
+export {$convertToMarkdownString as convertToMarkdownString} from '@lexical/markdown';
+export {$convertFromMarkdownString as convertFromMarkdownString} from '@lexical/markdown';

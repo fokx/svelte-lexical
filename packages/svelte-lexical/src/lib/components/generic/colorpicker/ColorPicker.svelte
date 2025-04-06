@@ -66,13 +66,13 @@
     }
   });
 
-  // run(() => {
-  //   if (color) {
-  //     const newColor = transformColor('hex', color);
-  //     selfColor = newColor;
-  //     inputColor = newColor.hex;
-  //   }
-  // });
+  $effect(() => {
+    if (color) {
+      const newColor = transformColor('hex', color);
+      selfColor = newColor;
+      inputColor = newColor.hex;
+    }
+  });
 </script>
 
 <div
@@ -81,6 +81,7 @@
   bind:this={innerDivRef}>
   <TextInput label="Hex" onChange={onSetHex} value={inputColor} width="120px" />
   <div class="color-picker-basic-color">
+    <!-- eslint-disable svelte/require-each-key -->
     {#each basicColors as basicColor}
       <!-- svelte-ignore a11y_consider_explicit_label -->
       <button

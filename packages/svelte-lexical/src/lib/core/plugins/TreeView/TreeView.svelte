@@ -53,12 +53,12 @@
   });
 
   interface Props {
-    treeTypeButtonClassName: string;
-    timeTravelButtonClassName: string;
-    timeTravelPanelButtonClassName: string;
-    timeTravelPanelClassName: string;
-    timeTravelPanelSliderClassName: string;
-    viewClassName: string;
+    treeTypeButtonClassName?: string;
+    timeTravelButtonClassName?: string;
+    timeTravelPanelButtonClassName?: string;
+    timeTravelPanelClassName?: string;
+    timeTravelPanelSliderClassName?: string;
+    viewClassName?: string;
   }
 
   let {
@@ -218,13 +218,10 @@
         const nodeKeyDisplay = `(${nodeKey})`;
         const typeDisplay = node.getType() || '';
         const isSelected = node.isSelected();
-        const idsDisplay = isMarkNode(node)
-          ? ` id: [ ${node.getIDs().join(', ')} ] `
-          : '';
 
         res += `${isSelected ? SYMBOLS.selectedLine : ' '} ${indent.join(
           ' ',
-        )} ${nodeKeyDisplay} ${typeDisplay} ${idsDisplay} ${printNode(node)}\n`;
+        )} ${nodeKeyDisplay} ${typeDisplay} ${printNode(node)}\n`;
 
         res += printSelectedCharsLine({
           indent,
@@ -763,5 +760,14 @@
     font-size: 12px;
     overflow: auto;
     max-height: 400px;
+  }
+
+  pre::-webkit-scrollbar {
+    background: transparent;
+    width: 10px;
+  }
+
+  pre::-webkit-scrollbar-thumb {
+    background: #999;
   }
 </style>

@@ -16,6 +16,7 @@ import {
 import {
   assertHTML,
   assertSelection,
+  expect,
   focusEditor,
   html,
   initialize,
@@ -62,6 +63,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -138,6 +140,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -169,6 +172,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke
@@ -233,6 +237,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -265,6 +270,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Skywalker
@@ -309,6 +315,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -341,6 +348,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke
@@ -385,6 +393,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -408,6 +417,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke
@@ -487,6 +497,7 @@ test.describe('Mentions', () => {
           <span data-lexical-text="true">abc</span>
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -512,6 +523,7 @@ test.describe('Mentions', () => {
           <span data-lexical-text="true">abc</span>
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke
@@ -591,6 +603,7 @@ test.describe('Mentions', () => {
         <p class="PlaygroundEditorTheme__paragraph">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -598,6 +611,7 @@ test.describe('Mentions', () => {
           <span data-lexical-text="true"></span>
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -605,6 +619,7 @@ test.describe('Mentions', () => {
           <span data-lexical-text="true"></span>
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -612,6 +627,7 @@ test.describe('Mentions', () => {
           <span data-lexical-text="true"></span>
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -647,6 +663,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true">Skywalker</span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -654,6 +671,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -661,6 +679,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -678,6 +697,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true">Skywalker</span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -685,6 +705,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -692,6 +713,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -715,6 +737,7 @@ test.describe('Mentions', () => {
           <p class="PlaygroundEditorTheme__paragraph">
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -722,6 +745,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -729,6 +753,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -744,6 +769,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -751,6 +777,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -758,6 +785,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -784,6 +812,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true">Skywalker</span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -791,6 +820,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -808,6 +838,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true">Skywalker</span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -815,6 +846,7 @@ test.describe('Mentions', () => {
             <span data-lexical-text="true"></span>
             <span
               class="mention"
+              spellcheck="false"
               style="background-color: rgba(24, 119, 232, 0.2);"
               data-lexical-text="true">
               Luke Skywalker
@@ -880,6 +912,7 @@ test.describe('Mentions', () => {
           dir="ltr">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -972,6 +1005,7 @@ test.describe('Mentions', () => {
           dir="ltr">
           <span
             class="mention"
+            spellcheck="false"
             style="background-color: rgba(24, 119, 232, 0.2);"
             data-lexical-text="true">
             Luke Skywalker
@@ -986,5 +1020,18 @@ test.describe('Mentions', () => {
       focusOffset: 8,
       focusPath: [0, 1, 0],
     });
+  });
+
+  test(`Sets correct attributes on typeahead menu container`, async ({
+    page,
+    isCollab,
+  }) => {
+    test.skip(isCollab);
+    await focusEditor(page);
+    await page.keyboard.type('@a');
+
+    const menuElement = await page.locator('#typeahead-menu');
+    expect(await menuElement.getAttribute('aria-label')).toBe('Typeahead menu');
+    expect(await menuElement.getAttribute('role')).toBe('listbox');
   });
 });

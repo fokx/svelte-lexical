@@ -1,0 +1,82 @@
+---
+title: Clear the content of the editor
+description: Explanation on how to remove all content of the editor
+---
+
+import {Steps} from '@astrojs/starlight/components';
+
+You can programmatically clear the content of the editor as follows:
+
+## Button Component for clearing contents
+
+<Steps>
+
+		1. Create a button component that clears the content of the editor.
+
+			```svelte
+			// ClearButton.svelte
+			<script lang="ts">
+				import { getEditor, $getRoot as getRoot } from 'svelte-lexical';
+				const editor = getEditor();
+
+				function clearContents() {
+					editor.update(() => {
+						getRoot().clear();
+					});
+				}
+			</script>
+
+			<button on:click={clearContents}>Clear the contents</button>
+			```
+
+		2. Add the button component to the composer.
+
+			```svelte {23}
+			// MyEditor.svelte
+			<script lang="ts">
+				import {
+					Composer, ContentEditable, HorizontalRuleNode, HorizontalRulePlugin, RichTextPlugin	} from 'svelte-lexical';
+				import { theme } from 'svelte-lexical/dist/themes/default';
+				import MyToolbar from './MyToolbar.svelte';
+				import ClearButton from './ClearButton.svelte';
+
+				const initialConfig = {
+					theme: theme,
+					namespace: 'pg_demo',
+					nodes: [HorizontalRuleNode],
+					onError: (error: Error) => {
+						throw error;
+					}
+				};
+				let composer: Composer;
+			</script>
+
+			<Composer {initialConfig} bind:this={composer}>
+				<div class="editor-shell svelte-lexical">
+					<MyToolbar />
+					<ClearButton />
+					<div class="editor-container">
+						<div class="editor-scroller">
+							<div class="editor">
+								<ContentEditable />
+							</div>
+						</div>
+						<RichTextPlugin />
+						<HorizontalRulePlugin />
+					</div>
+				</div>
+			</Composer>
+			```
+
+</Steps>
+
+## Clear using composer reference
+
+You can clear the contents directly using the composer reference as well.
+
+```js
+	composer.getEditor().update(() => {
+		getRoot().clear();
+	});
+```
+Find more about getting the composer reference [here](get-reference-to-editor)

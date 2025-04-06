@@ -1,7 +1,6 @@
 <script lang="ts">
   import {run} from 'svelte/legacy';
 
-  import ColorPickerDialog from '$lib/components/generic/colorpicker/ColorPickerDialog.svelte';
   import {getEditor} from '$lib/core/composerContext.js';
   import {
     $unmergeCell as unmergeCell,
@@ -11,21 +10,22 @@
     $deleteTableRow__EXPERIMENTAL as deleteTableRow__EXPERIMENTAL,
     $deleteTableColumn__EXPERIMENTAL as deleteTableColumn__EXPERIMENTAL,
     $getTableRowIndexFromTableCellNode as getTableRowIndexFromTableCellNode,
-    $isTableRowNode as isTableRowNode,
     TableCellHeaderStates,
-    TableRowNode,
     $getTableColumnIndexFromTableCellNode as getTableColumnIndexFromTableCellNode,
+    getTableElement,
+    $computeTableMapSkipCellCheck as computeTableMapSkipCellCheck,
   } from '@lexical/table';
   import {
     $getSelection as getSelection,
     $isRangeSelection as isRangeSelection,
     type LexicalEditor,
-    $getRoot as getRoot,
+    $setSelection as setSelection,
     $isParagraphNode as isParagraphNode,
     $createParagraphNode as createParagraphNode,
     ElementNode,
     $isTextNode as isTextNode,
     $isElementNode as isElementNode,
+    isDOMNode,
   } from 'lexical';
   import {
     $isTableSelection as isTableSelection,
@@ -33,25 +33,32 @@
     $isTableCellNode as isTableCellNode,
     type TableSelection,
     $getTableNodeFromLexicalNodeOrThrow as getTableNodeFromLexicalNodeOrThrow,
-    type HTMLTableElementWithWithTableSelectionState,
     getTableObserverFromTableElement,
   } from '@lexical/table';
   import {onMount} from 'svelte';
   import {mergeRegister} from '@lexical/utils';
   import {writable} from 'svelte/store';
   import Portal from '$lib/components/generic/portal/Portal.svelte';
+  import DropDown from '$lib/components/generic/dropdown/DropDown.svelte';
+  import DropDownItem from '$lib/components/generic/dropdown/DropDownItem.svelte';
+  import ColorPickerDialog from '$lib/components/generic/colorpicker/ColorPickerDialog.svelte';
   interface Props {
     onClose: () => void;
     _tableCellNode: TableCellNode;
     setIsMenuOpen: (isOpen: boolean) => void;
     contextRef: null | HTMLElement;
     cellMerge: boolean;
+    colorPicker: ColorPickerDialog;
   }
 
-  let {onClose, _tableCellNode, setIsMenuOpen, contextRef, cellMerge}: Props =
-    $props();
-
-  let colorPicker: ColorPickerDialog;
+  let {
+    onClose,
+    _tableCellNode,
+    setIsMenuOpen,
+    contextRef,
+    cellMerge,
+    colorPicker,
+  }: Props = $props();
 
   const editor = getEditor();
   let dropDownRef: HTMLDivElement | null = $state(null);
@@ -186,24 +193,25 @@
       let topPosition = menuButtonRect.top;
       if (topPosition + dropDownElementRect.height > window.innerHeight) {
         const position = menuButtonRect.bottom - dropDownElementRect.height;
-        topPosition = (position < 0 ? margin : position) + window.pageYOffset;
+        topPosition = position < 0 ? margin : position;
       }
-      dropDownElement.style.top = `${topPosition + +window.pageYOffset}px`;
+      dropDownElement.style.top = `${topPosition}px`;
     }
   });
 
-  onMount(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropDownRef != null &&
-        contextRef != null &&
-        !dropDownRef.contains(event.target as Node) &&
-        !contextRef.contains(event.target as Node)
-      ) {
-        setIsMenuOpen(false);
-      }
+  function handleClickOutside(event: MouseEvent) {
+    if (
+      dropDownRef != null &&
+      contextRef != null &&
+      isDOMNode(event.target) &&
+      !dropDownRef.contains(event.target) &&
+      !contextRef.contains(event.target)
+    ) {
+      setIsMenuOpen(false);
     }
+  }
 
+  onMount(() => {
     window.addEventListener('click', handleClickOutside);
 
     return () => window.removeEventListener('click', handleClickOutside);
@@ -213,9 +221,10 @@
     editor.update(() => {
       if (tableCellNode.isAttached()) {
         const tableNode = getTableNodeFromLexicalNodeOrThrow(tableCellNode);
-        const tableElement = editor.getElementByKey(
-          tableNode.getKey(),
-        ) as HTMLTableElementWithWithTableSelectionState;
+        const tableElement = getTableElement(
+          tableNode,
+          editor.getElementByKey(tableNode.getKey()),
+        );
 
         if (!tableElement) {
           throw new Error('Expected to find tableElement in DOM');
@@ -223,15 +232,13 @@
 
         const tableObserver = getTableObserverFromTableElement(tableElement);
         if (tableObserver !== null) {
-          tableObserver.clearHighlight();
+          tableObserver.$clearHighlight();
         }
 
         tableNode.markDirty();
         tableCellNode = tableCellNode.getLatest();
       }
-
-      const rootNode = getRoot();
-      rootNode.selectStart();
+      setSelection(null);
     });
   };
 
@@ -239,38 +246,105 @@
     editor.update(() => {
       const selection = getSelection();
       if (isTableSelection(selection)) {
-        const {columns, rows} = computeSelectionCount(selection);
+        // Get all selected cells and compute the total area
         const nodes = selection.getNodes();
-        let firstCell: null | TableCellNode = null;
-        for (let i = 0; i < nodes.length; i++) {
-          const node = nodes[i];
-          if (isTableCellNode(node)) {
-            if (firstCell === null) {
-              node.setColSpan(columns).setRowSpan(rows);
-              firstCell = node;
-              const isEmpty = cellContainsEmptyParagraph(node);
-              let firstChild;
-              if (
-                isEmpty &&
-                isParagraphNode((firstChild = node.getFirstChild()))
-              ) {
-                firstChild.remove();
-              }
-            } else if (isTableCellNode(firstCell)) {
-              const isEmpty = cellContainsEmptyParagraph(node);
-              if (!isEmpty) {
-                firstCell.append(...node.getChildren());
-              }
-              node.remove();
+        const tableCells = nodes.filter(isTableCellNode);
+
+        if (tableCells.length === 0) {
+          return;
+        }
+
+        // Find the table node
+        const tableNode = getTableNodeFromLexicalNodeOrThrow(tableCells[0]);
+        const [gridMap] = computeTableMapSkipCellCheck(tableNode, null, null);
+
+        // Find the boundaries of the selection including merged cells
+        let minRow = Infinity;
+        let maxRow = -Infinity;
+        let minCol = Infinity;
+        let maxCol = -Infinity;
+
+        // First pass: find the actual boundaries considering merged cells
+        const processedCells = new Set();
+        for (const row of gridMap) {
+          for (const mapCell of row) {
+            if (!mapCell || !mapCell.cell) {
+              continue;
+            }
+
+            const cellKey = mapCell.cell.getKey();
+            if (processedCells.has(cellKey)) {
+              continue;
+            }
+
+            if (tableCells.some((cell) => cell.is(mapCell.cell))) {
+              processedCells.add(cellKey);
+              // Get the actual position of this cell in the grid
+              const cellStartRow = mapCell.startRow;
+              const cellStartCol = mapCell.startColumn;
+              const cellRowSpan = mapCell.cell.__rowSpan || 1;
+              const cellColSpan = mapCell.cell.__colSpan || 1;
+
+              // Update boundaries considering the cell's actual position and span
+              minRow = Math.min(minRow, cellStartRow);
+              maxRow = Math.max(maxRow, cellStartRow + cellRowSpan - 1);
+              minCol = Math.min(minCol, cellStartCol);
+              maxCol = Math.max(maxCol, cellStartCol + cellColSpan - 1);
             }
           }
         }
-        if (firstCell !== null) {
-          if (firstCell.getChildrenSize() === 0) {
-            firstCell.append(createParagraphNode());
-          }
-          selectLastDescendant(firstCell);
+
+        // Validate boundaries
+        if (minRow === Infinity || minCol === Infinity) {
+          return;
         }
+
+        // The total span of the merged cell
+        const totalRowSpan = maxRow - minRow + 1;
+        const totalColSpan = maxCol - minCol + 1;
+
+        // Use the top-left cell as the target cell
+        const targetCellMap = gridMap[minRow][minCol];
+        if (!targetCellMap?.cell) {
+          return;
+        }
+        const targetCell = targetCellMap.cell;
+
+        // Set the spans for the target cell
+        targetCell.setColSpan(totalColSpan);
+        targetCell.setRowSpan(totalRowSpan);
+
+        // Move content from other cells to the target cell
+        const seenCells = new Set([targetCell.getKey()]);
+
+        // Second pass: merge content and remove other cells
+        for (let row = minRow; row <= maxRow; row++) {
+          for (let col = minCol; col <= maxCol; col++) {
+            const mapCell = gridMap[row][col];
+            if (!mapCell?.cell) {
+              continue;
+            }
+
+            const currentCell = mapCell.cell;
+            const key = currentCell.getKey();
+
+            if (!seenCells.has(key)) {
+              seenCells.add(key);
+              const isEmpty = cellContainsEmptyParagraph(currentCell);
+              if (!isEmpty) {
+                targetCell.append(...currentCell.getChildren());
+              }
+              currentCell.remove();
+            }
+          }
+        }
+
+        // Ensure target cell has content
+        if (targetCell.getChildrenSize() === 0) {
+          targetCell.append(createParagraphNode());
+        }
+
+        selectLastDescendant(targetCell);
         onClose();
       }
     });
@@ -284,7 +358,9 @@
 
   const insertTableRowAtSelection = (shouldInsertAfter: boolean) => {
     editor.update(() => {
-      insertTableRow__EXPERIMENTAL(shouldInsertAfter);
+      for (let i = 0; i < selectionCounts.rows; i++) {
+        insertTableRow__EXPERIMENTAL(shouldInsertAfter);
+      }
       onClose();
     });
   };
@@ -328,26 +404,25 @@
 
       const tableRowIndex = getTableRowIndexFromTableCellNode(tableCellNode);
 
-      const tableRows = tableNode.getChildren();
+      const [gridMap] = computeTableMapSkipCellCheck(tableNode, null, null);
 
-      if (tableRowIndex >= tableRows.length || tableRowIndex < 0) {
-        throw new Error('Expected table cell to be inside of table row.');
-      }
+      const rowCells = new Set<TableCellNode>();
 
-      const tableRow = tableRows[tableRowIndex];
+      const newStyle =
+        tableCellNode.getHeaderStyles() ^ TableCellHeaderStates.ROW;
 
-      if (!isTableRowNode(tableRow)) {
-        throw new Error('Expected table row');
-      }
+      for (let col = 0; col < gridMap[tableRowIndex].length; col++) {
+        const mapCell = gridMap[tableRowIndex][col];
 
-      tableRow.getChildren().forEach((tableCell) => {
-        if (!isTableCellNode(tableCell)) {
-          throw new Error('Expected table cell');
+        if (!mapCell?.cell) {
+          continue;
         }
 
-        tableCell.toggleHeaderStyle(TableCellHeaderStates.ROW);
-      });
-
+        if (!rowCells.has(mapCell.cell)) {
+          rowCells.add(mapCell.cell);
+          mapCell.cell.setHeaderStyles(newStyle, TableCellHeaderStates.ROW);
+        }
+      }
       clearTableSelection();
       onClose();
     });
@@ -360,35 +435,64 @@
       const tableColumnIndex =
         getTableColumnIndexFromTableCellNode(tableCellNode);
 
-      const tableRows = tableNode.getChildren<TableRowNode>();
-      const maxRowsLength = Math.max(
-        ...tableRows.map((row) => row.getChildren().length),
-      );
+      const [gridMap] = computeTableMapSkipCellCheck(tableNode, null, null);
 
-      if (tableColumnIndex >= maxRowsLength || tableColumnIndex < 0) {
-        throw new Error('Expected table cell to be inside of table row.');
-      }
+      const columnCells = new Set<TableCellNode>();
+      const newStyle =
+        tableCellNode.getHeaderStyles() ^ TableCellHeaderStates.COLUMN;
 
-      for (let r = 0; r < tableRows.length; r++) {
-        const tableRow = tableRows[r];
+      for (let row = 0; row < gridMap.length; row++) {
+        const mapCell = gridMap[row][tableColumnIndex];
 
-        if (!isTableRowNode(tableRow)) {
-          throw new Error('Expected table row');
-        }
-
-        const tableCells = tableRow.getChildren();
-        if (tableColumnIndex >= tableCells.length) {
-          // if cell is outside of bounds for the current row (for example various merge cell cases) we shouldn't highlight it
+        if (!mapCell?.cell) {
           continue;
         }
 
-        const tableCell = tableCells[tableColumnIndex];
-
-        if (!isTableCellNode(tableCell)) {
-          throw new Error('Expected table cell');
+        if (!columnCells.has(mapCell.cell)) {
+          columnCells.add(mapCell.cell);
+          mapCell.cell.setHeaderStyles(newStyle, TableCellHeaderStates.COLUMN);
         }
+      }
+      clearTableSelection();
+      onClose();
+    });
+  };
 
-        tableCell.toggleHeaderStyle(TableCellHeaderStates.COLUMN);
+  const toggleRowStriping = () => {
+    editor.update(() => {
+      if (tableCellNode.isAttached()) {
+        const tableNode = getTableNodeFromLexicalNodeOrThrow(tableCellNode);
+        if (tableNode) {
+          tableNode.setRowStriping(!tableNode.getRowStriping());
+        }
+      }
+      clearTableSelection();
+      onClose();
+    });
+  };
+
+  const toggleFirstRowFreeze = () => {
+    editor.update(() => {
+      if (tableCellNode.isAttached()) {
+        const tableNode = getTableNodeFromLexicalNodeOrThrow(tableCellNode);
+        if (tableNode) {
+          tableNode.setFrozenRows(tableNode.getFrozenRows() === 0 ? 1 : 0);
+        }
+      }
+      clearTableSelection();
+      onClose();
+    });
+  };
+
+  const toggleFirstColumnFreeze = () => {
+    editor.update(() => {
+      if (tableCellNode.isAttached()) {
+        const tableNode = getTableNodeFromLexicalNodeOrThrow(tableCellNode);
+        if (tableNode) {
+          tableNode.setFrozenColumns(
+            tableNode.getFrozenColumns() === 0 ? 1 : 0,
+          );
+        }
       }
       clearTableSelection();
       onClose();
@@ -403,6 +507,27 @@
         if (isTableCellNode(cell)) {
           cell.setBackgroundColor(value);
         }
+        if (isTableSelection(selection)) {
+          const nodes = selection.getNodes();
+          for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i];
+            if (isTableCellNode(node)) {
+              node.setBackgroundColor(value);
+            }
+          }
+        }
+      }
+    });
+  };
+
+  const formatVerticalAlign = (value: string) => {
+    editor.update(() => {
+      const selection = getSelection();
+      if (isRangeSelection(selection) || isTableSelection(selection)) {
+        const [cell] = getNodeTriplet(selection.anchor);
+        if (isTableCellNode(cell)) {
+          cell.setVerticalAlign(value);
+        }
 
         if (isTableSelection(selection)) {
           const nodes = selection.getNodes();
@@ -410,7 +535,7 @@
           for (let i = 0; i < nodes.length; i++) {
             const node = nodes[i];
             if (isTableCellNode(node)) {
-              node.setBackgroundColor(value);
+              node.setVerticalAlign(value);
             }
           }
         }
@@ -424,7 +549,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="dropdown"
+    class="dropdown svelte-lexical"
     bind:this={dropDownRef}
     onclick={(e) => {
       e.stopPropagation();
@@ -436,7 +561,7 @@
           class="item"
           onclick={() => mergeTableCellsAtSelection()}
           data-test-id="table-merge-cells">
-          Merge cells
+          <span class="text">Merge cells</span>
         </button>
       {:else if canUnmergeCell}
         <button
@@ -444,7 +569,7 @@
           class="item"
           onclick={() => unmergeTableCellsAtSelection()}
           data-test-id="table-unmerge-cells">
-          Unmerge cells
+          <span class="text">Unmerge cells</span>
         </button>
       {/if}
     {/if}
@@ -452,10 +577,67 @@
       type="button"
       class="item"
       onclick={() => {
-        colorPicker.open(handleCellBackgroundColor);
+        setIsMenuOpen(false);
+        colorPicker.open(handleCellBackgroundColor, $backgroundColor);
       }}
       data-test-id="table-background-color">
       <span class="text">Background color</span>
+    </button>
+    <button
+      type="button"
+      class="item"
+      onclick={() => toggleRowStriping()}
+      data-test-id="table-row-striping">
+      <span class="text">Toggle Row Striping</span>
+    </button>
+    <DropDown
+      buttonLabel="Vertical Align"
+      buttonClassName="item"
+      buttonAriaLabel="Formatting options for vertical alignment">
+      <DropDownItem
+        onclick={() => {
+          formatVerticalAlign('top');
+        }}
+        class="item wide">
+        <div class="icon-text-container">
+          <i class="icon vertical-top"></i>
+          <span class="text">Top Align</span>
+        </div>
+      </DropDownItem>
+      <DropDownItem
+        onclick={() => {
+          formatVerticalAlign('middle');
+        }}
+        class="item wide">
+        <div class="icon-text-container">
+          <i class="icon vertical-middle"></i>
+          <span class="text">Middle Align</span>
+        </div>
+      </DropDownItem>
+      <DropDownItem
+        onclick={() => {
+          formatVerticalAlign('bottom');
+        }}
+        class="item wide">
+        <div class="icon-text-container">
+          <i class="icon vertical-bottom"></i>
+          <span class="text">Bottom Align</span>
+        </div>
+      </DropDownItem>
+    </DropDown>
+    <button
+      type="button"
+      class="item"
+      onclick={() => toggleFirstRowFreeze()}
+      data-test-id="table-freeze-first-row">
+      <span class="text">Toggle First Row Freeze</span>
+    </button>
+    <button
+      type="button"
+      class="item"
+      onclick={() => toggleFirstColumnFreeze()}
+      data-test-id="table-freeze-first-column">
+      <span class="text">Toggle First Column Freeze</span>
     </button>
     <hr />
     <button
@@ -464,10 +646,8 @@
       onclick={() => insertTableRowAtSelection(false)}
       data-test-id="table-insert-row-above">
       <span class="text">
-        Insert{' '}
-        {selectionCounts.rows === 1
-          ? 'row'
-          : `${selectionCounts.rows} rows`}{' '}
+        Insert
+        {selectionCounts.rows === 1 ? 'row' : `${selectionCounts.rows} rows`}
         above
       </span>
     </button>
@@ -477,10 +657,8 @@
       onclick={() => insertTableRowAtSelection(true)}
       data-test-id="table-insert-row-below">
       <span class="text">
-        Insert{' '}
-        {selectionCounts.rows === 1
-          ? 'row'
-          : `${selectionCounts.rows} rows`}{' '}
+        Insert
+        {selectionCounts.rows === 1 ? 'row' : `${selectionCounts.rows} rows`}
         below
       </span>
     </button>
@@ -491,10 +669,10 @@
       onclick={() => insertTableColumnAtSelection(false)}
       data-test-id="table-insert-column-before">
       <span class="text">
-        Insert{' '}
+        Insert
         {selectionCounts.columns === 1
           ? 'column'
-          : `${selectionCounts.columns} columns`}{' '}
+          : `${selectionCounts.columns} columns`}
         left
       </span>
     </button>
@@ -504,10 +682,10 @@
       onclick={() => insertTableColumnAtSelection(true)}
       data-test-id="table-insert-column-after">
       <span class="text">
-        Insert{' '}
+        Insert
         {selectionCounts.columns === 1
           ? 'column'
-          : `${selectionCounts.columns} columns`}{' '}
+          : `${selectionCounts.columns} columns`}
         right
       </span>
     </button>
@@ -534,12 +712,16 @@
       <span class="text">Delete table</span>
     </button>
     <hr />
-    <button type="button" class="item" onclick={() => toggleTableRowIsHeader()}>
+    <button
+      type="button"
+      class="item"
+      onclick={() => toggleTableRowIsHeader()}
+      data-test-id="table-row-header">
       <span class="text">
         {(tableCellNode.__headerState & TableCellHeaderStates.ROW) ===
         TableCellHeaderStates.ROW
           ? 'Remove'
-          : 'Add'}{' '}
+          : 'Add'}
         row header
       </span>
     </button>
@@ -552,14 +734,9 @@
         {(tableCellNode.__headerState & TableCellHeaderStates.COLUMN) ===
         TableCellHeaderStates.COLUMN
           ? 'Remove'
-          : 'Add'}{' '}
+          : 'Add'}
         column header
       </span>
     </button>
   </div>
 </Portal>
-
-<ColorPickerDialog
-  title="Cell background color"
-  color={$backgroundColor}
-  bind:this={colorPicker} />
