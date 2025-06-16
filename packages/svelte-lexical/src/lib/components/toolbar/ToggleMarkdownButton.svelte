@@ -3,7 +3,7 @@
   import {getContext} from 'svelte';
   import type {Readable} from 'svelte/store';
   import {getEditor, getIsEditable} from '$lib/core/composerContext.js';
-  import {PLAYGROUND_TRANSFORMERS} from '$lib/core/plugins/MardownShortcut/transformers.js';
+  import {PLAYGROUND_TRANSFORMERS} from '$lib/core/plugins/MarkdownShortcut/transformers';
   import {$createCodeNode as createCodeNode, $isCodeNode as isCodeNode} from '@lexical/code';
   import {
     $convertFromMarkdownString as convertFromMarkdownString,
