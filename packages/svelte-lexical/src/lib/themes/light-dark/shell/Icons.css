@@ -1,5 +1,3 @@
-@import '../variables.css';
-
 .svelte-lexical {
   i,
   .icon {
@@ -103,8 +101,12 @@
     background-image: url(/images/icons/3-columns.svg);
   }
 
-  i.tweet {
-    background-image: url(/images/icons/tweet.svg);
+  i.x {
+    background-image: url(/images/icons/x.svg);
+  }
+
+  i.bluesky {
+    background-image: url(/images/icons/bluesky.svg);
   }
 
   i.youtube {

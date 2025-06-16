@@ -258,6 +258,62 @@ test.describe.parallel('Selection', () => {
     await assertHTML(page, lines(''));
   });
 
+  test('can delete text by line forwards with control+K', async ({
+    page,
+    isPlainText,
+  }) => {
+    const deleteLineForwardWithControlK = async () => {
+      await page.keyboard.down('Control');
+      await page.keyboard.press('k');
+      await page.keyboard.up('Control');
+    };
+
+    test.skip(isPlainText || !IS_MAC);
+    await focusEditor(page);
+    await page.keyboard.type('One');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Two');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Three');
+
+    const p = (text) =>
+      text
+        ? html`
+            <p
+              class="PlaygroundEditorTheme__paragraph PlaygroundEditorTheme__ltr"
+              dir="ltr">
+              <span data-lexical-text="true">${text}</span>
+            </p>
+          `
+        : html`
+            <p class="PlaygroundEditorTheme__paragraph"><br /></p>
+          `;
+    const lines = (...args) => html`
+      ${args.map(p).join('')}
+    `;
+    await assertHTML(page, lines('One', 'Two', '', 'Three'));
+    // Move to the end of the line of 'Two'
+    await moveUp(page, 2);
+    await deleteLineForwardWithControlK(page);
+    await assertHTML(page, lines('One', 'Two', 'Three'));
+    await deleteLineForwardWithControlK(page);
+    await assertHTML(page, lines('One', 'TwoThree'));
+    await deleteLineForwardWithControlK(page);
+    await assertHTML(page, lines('One', 'Two'));
+    await deleteLineForwardWithControlK(page);
+    await assertHTML(page, lines('One', 'Two'));
+    await moveToEditorBeginning(page);
+    await deleteLineForwardWithControlK(page);
+    await assertHTML(page, lines('', 'Two'));
+    await deleteLineForwardWithControlK(page);
+    await assertHTML(page, lines('Two'));
+    await deleteLineForwardWithControlK(page);
+    await assertHTML(page, lines(''));
+    await deleteLineForwardWithControlK(page);
+    await assertHTML(page, lines(''));
+  });
+
   test('can delete line which ends with element backwards with CMD+delete', async ({
     page,
     isPlainText,
@@ -928,51 +984,48 @@ test.describe.parallel('Selection', () => {
     );
   });
 
-  test.fixme(
-    'Select all from Node selection #4658',
-    async ({page, isPlainText}) => {
-      // TODO selectAll is bad for Linux #4665
-      test.skip(isPlainText || IS_LINUX);
+  test('Select all from Node selection #4658', async ({page, isPlainText}) => {
+    // TODO selectAll is bad for Linux #4665
+    test.skip(isPlainText || IS_LINUX);
 
-      await insertYouTubeEmbed(page, YOUTUBE_SAMPLE_URL);
-      await page.keyboard.type('abcdefg');
-      await moveLeft(page, 'abcdefg'.length + 1);
+    await insertYouTubeEmbed(page, YOUTUBE_SAMPLE_URL);
+    await page.keyboard.type('abcdefg');
+    await moveLeft(page, 'abcdefg'.length + 1);
 
-      await selectAll(page);
-      await page.keyboard.press('Backspace');
+    await selectAll(page);
+    await page.keyboard.press('Backspace');
 
-      await assertHTML(
-        page,
-        html`
-          <p class="PlaygroundEditorTheme__paragraph"><br /></p>
-        `,
-      );
-    },
-  );
+    await assertHTML(
+      page,
+      html`
+        <p class="PlaygroundEditorTheme__paragraph"><br /></p>
+      `,
+    );
+  });
 
-  test.fixme(
-    'Select all (DecoratorNode at start) #4670',
-    async ({page, isPlainText}) => {
-      // TODO selectAll is bad for Linux #4665
-      test.skip(isPlainText || IS_LINUX);
+  test('Select all (DecoratorNode at start) #4670', async ({
+    page,
+    isPlainText,
+  }) => {
+    // TODO selectAll is bad for Linux #4665
+    test.skip(isPlainText || IS_LINUX);
 
-      await insertYouTubeEmbed(page, YOUTUBE_SAMPLE_URL);
-      // Delete empty paragraph in front
-      await moveLeft(page, 2);
-      await page.keyboard.press('Backspace');
-      await moveRight(page, 2);
-      await page.keyboard.type('abcdefg');
+    await insertYouTubeEmbed(page, YOUTUBE_SAMPLE_URL);
+    // Delete empty paragraph in front
+    await moveLeft(page, 2);
+    await page.keyboard.press('Backspace');
+    await moveRight(page, 2);
+    await page.keyboard.type('abcdefg');
 
-      await selectAll(page);
-      await page.keyboard.press('Backspace');
-      await assertHTML(
-        page,
-        html`
-          <p class="PlaygroundEditorTheme__paragraph"><br /></p>
-        `,
-      );
-    },
-  );
+    await selectAll(page);
+    await page.keyboard.press('Backspace');
+    await assertHTML(
+      page,
+      html`
+        <p class="PlaygroundEditorTheme__paragraph"><br /></p>
+      `,
+    );
+  });
 
   test('Can use block controls on selections including decorator nodes #5371', async ({
     page,

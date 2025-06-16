@@ -1,5 +1,3 @@
-@import '../variables.css';
-
 .svelte-lexical {
   .toolbar {
     display: flex;
@@ -168,5 +166,19 @@
     .code-language .dropdown-button-text {
       display: flex !important;
     }
+  }
+
+  .toolbar .block-controls {
+    display: flex;
+    align-items: center;
+  }
+
+  .toolbar .block-controls .dropdown-button-text {
+    width: 7em;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
   }
 }

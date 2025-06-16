@@ -26,8 +26,14 @@ export {default as TablePlugin} from './core/plugins/Table/TablePlugin.svelte';
 export {default as TableActionMenuPlugin} from './core/plugins/Table/TableActionMenuPlugin.svelte';
 export {default as TableHoverActionPlugin} from './core/plugins/Table/TableHoverActionPlugin.svelte';
 export {default as TableCellResizerPlugin} from './core/plugins/Table/TableCellResizerPlugin.svelte';
+export {default as ShortcutsPlugin} from './components/toolbar/ShortcutsPlugin.svelte';
+export {default as YoutubePlugin} from './core/plugins/youtube/YoutubePlugin.svelte';
+export {default as TwitterPlugin} from './core/plugins/twitter/TwitterPlugin.svelte';
+export {default as BlueskyPlugin} from './core/plugins/bluesky/BlueskyPlugin.svelte';
+export {default as OnChangePlugin} from './core/plugins/OnChangePlugin.svelte';
+export {default as TabIndentationPlugin} from './core/plugins/TabIndentationPlugin.svelte';
 
-export {default as MarkdownShortcutPlugin} from './core/plugins/MardownShortcut/MarkdownShortcutPlugin.svelte';
+export {default as MarkdownShortcutPlugin} from './core/plugins/MarkdownShortcut/MarkdownShortcutPlugin.svelte';
 export {
   INLINE_CODE,
   BOLD_ITALIC_STAR,
@@ -46,14 +52,14 @@ export {
   CHECK_LIST,
   LINK,
 } from '@lexical/markdown';
-export {HR, IMAGE} from './core/plugins/MardownShortcut/transformers.js';
+export {HR, IMAGE} from './core/plugins/MarkdownShortcut/transformers.js';
 // markdown transformer groups
 export {
   TEXT_FORMAT_TRANSFORMERS,
   ELEMENT_TRANSFORMERS,
   ALL_TRANSFORMERS,
-  PLAYGROUND_TRANSFORMERS,
-} from './core/plugins/MardownShortcut/transformers.js';
+  PLAYGROUND_TRANSFORMERS
+} from './core/plugins/MarkdownShortcut/transformers.js';
 
 export {HeadingNode, QuoteNode} from '@lexical/rich-text';
 export {ListNode, ListItemNode} from '@lexical/list';
@@ -67,6 +73,9 @@ export type {Provider} from '@lexical/yjs';
 export {LayoutContainerNode} from './core/plugins/ColumnsLayout/LayoutContainerNode.js';
 export {LayoutItemNode} from './core/plugins/ColumnsLayout/LayoutItemNode.js';
 export {TableNode, TableRowNode, TableCellNode} from '@lexical/table';
+export {YouTubeNode} from './core/plugins/youtube/YouTubeNode.js';
+export {TweetNode} from './core/plugins/twitter/TweetNode.js';
+export {BlueskyNode} from './core/plugins/bluesky/BlueskyNode.js';
 
 // toolbar
 export {default as ToolbarRichText} from './components/richtext/ToolbarRichText.svelte';
@@ -96,16 +105,6 @@ export {default as InsertHRDropDownItem} from './components/toolbar/InsertDropDo
 export {default as InsertImageDropDownItem} from './components/toolbar/InsertDropDown/InsertImageDropDownItem.svelte';
 export {default as FontFamilyDropDown} from './components/toolbar/FontFamilyDropDown.svelte';
 export {default as FontSizeDropDown} from './components/toolbar/FontSizeDropDown.svelte';
-
-export {default as ToggleMarkdownButton} from './components/toolbar/ToggleMarkdownButton.svelte';
-export {default as ImportButton} from './components/actionbar/ImportButton.svelte';
-export {default as ExportButton} from './components/actionbar/ExportButton.svelte';
-export {default as ReadonlyButton} from './components/actionbar/ReadonlyButton.svelte';
-export {
-  $convertToMarkdownString as convertToMarkdownString,
-  $convertFromMarkdownString as convertFromMarkdownString,
-} from '@lexical/markdown';
-
 export {default as FontSizeEntry} from './components/toolbar/FontSizeEntry.svelte';
 export {default as InsertLink} from './components/toolbar/InsertLink.svelte';
 export {default as CodeLanguageDropDown} from './components/toolbar/CodeLanguageDropDown.svelte';
@@ -116,13 +115,19 @@ export {default as SuperscriptDropDownItem} from './components/toolbar/MoreStyle
 export {default as ClearFormattingDropDownItem} from './components/toolbar/MoreStylesDropDown/ClearFormattingDropDownItem.svelte';
 export {default as InsertColumnLayoutDropDownItem} from './components/toolbar/InsertDropDown/InsertColumnLayoutDropDownItem.svelte';
 export {default as InsertTableDropDownItem} from './components/toolbar/InsertDropDown/InsertTableDropDownItem.svelte';
-export {default as ShortcutsPlugin} from './components/toolbar/ShortcutsPlugin.svelte';
+export {default as InsertYoutubeDropDownItem} from './components/toolbar/InsertDropDown/InsertYoutubeDropDownItem.svelte';
+export {default as InsertTweetDropDownItem} from './components/toolbar/InsertDropDown/InsertTweetDropDownItem.svelte';
+export {default as InsertBlueskyDropDownItem} from './components/toolbar/InsertDropDown/InsertBlueskyDropDownItem.svelte';
+
 // dialogs
 export {default as InsertImageDialog} from './components/toolbar/dialogs/InsertImageDialog.svelte';
 export {default as InsertImageUploadedDialogBody} from './components/toolbar/dialogs/InsertImageUploadedDialogBody.svelte';
 export {default as InsertImageUriDialogBody} from './components/toolbar/dialogs/InsertImageUriDialogBody.svelte';
 export {default as InsertColumnsDialog} from './components/toolbar/dialogs/InsertColumnsDialog.svelte';
 export {default as InsertTableDialog} from './components/toolbar/dialogs/InsertTableDialog.svelte';
+export {default as InsertYoutubeDialog} from './components/toolbar/dialogs/InsertYoutubeDialog.svelte';
+export {default as InsertTweetDialog} from './components/toolbar/dialogs/InsertTweetDialog.svelte';
+export {default as InsertBlueskyDialog} from './components/toolbar/dialogs/InsertBlueskyDialog.svelte';
 
 // commands
 export type {ImagePayload} from './core/plugins/Image/ImageNode.js';
@@ -167,6 +172,9 @@ export {$createLayoutContainerNode} from './core/plugins/ColumnsLayout/LayoutCon
 export {$createHashtagNode} from './core/plugins/HashtagNode.js';
 export {$createKeywordNode} from './core/plugins/KeywordNode.js';
 export {$createImageNode} from './core/plugins/Image/ImageNode.js';
+export {$createYouTubeNode} from './core/plugins/youtube/YouTubeNode.js';
+export {$createTweetNode} from './core/plugins/twitter/TweetNode.js';
+export {$createBlueskyNode} from './core/plugins/bluesky/BlueskyNode.js';
 
 // ui components
 export {default as DropDown} from './components/generic/dropdown/DropDown.svelte';
@@ -175,7 +183,7 @@ export {default as ModalDialog} from './components/generic/dialog/ModalDialog.sv
 export {default as CloseCircleButton} from './components/generic/button/CloseCircleButton.svelte';
 
 // util
-export {CAN_USE_DOM} from './environment/canUseDOM.js';
+export {CAN_USE_DOM} from '@lexical/utils';
 export {
   isNodeSelected,
   clearSelection,
@@ -189,3 +197,8 @@ export {$generateHtmlFromNodes as generateHtmlFromNodes} from '@lexical/html';
 export {$generateNodesFromDOM as generateNodesFromDOM} from '@lexical/html';
 export {$convertToMarkdownString as convertToMarkdownString} from '@lexical/markdown';
 export {$convertFromMarkdownString as convertFromMarkdownString} from '@lexical/markdown';
+
+export {default as ToggleMarkdownButton} from './components/toolbar/ToggleMarkdownButton.svelte';
+export {default as ImportButton} from './components/actionbar/ImportButton.svelte';
+export {default as ExportButton} from './components/actionbar/ExportButton.svelte';
+export {default as ReadonlyButton} from './components/actionbar/ReadonlyButton.svelte';

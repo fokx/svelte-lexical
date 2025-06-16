@@ -29,10 +29,12 @@ import {TOGGLE_LINK_COMMAND} from '@lexical/link';
 import {sanitizeUrl} from './plugins/link/url.js';
 
 export const formatParagraph = (editor: LexicalEditor) => {
-  const selection = $getSelection();
-  if ($isRangeSelection(selection)) {
-    $setBlocksType(selection, () => $createParagraphNode());
-  }
+  editor.update(() => {
+    const selection = $getSelection();
+    if ($isRangeSelection(selection)) {
+      $setBlocksType(selection, () => $createParagraphNode());
+    }
+  });
 };
 
 export const formatHeading = (
@@ -149,7 +151,14 @@ export const clearFormatting = (editor: LexicalEditor) => {
           }
           if (textNode.__format !== 0) {
             textNode.setFormat(0);
-            $getNearestBlockElementAncestorOrThrow(textNode).setFormat('');
+          }
+          const nearestBlockElement =
+            $getNearestBlockElementAncestorOrThrow(textNode);
+          if (nearestBlockElement.__format !== 0) {
+            nearestBlockElement.setFormat('');
+          }
+          if (nearestBlockElement.__indent !== 0) {
+            nearestBlockElement.setIndent(0);
           }
           node = textNode;
         } else if ($isHeadingNode(node) || $isQuoteNode(node)) {

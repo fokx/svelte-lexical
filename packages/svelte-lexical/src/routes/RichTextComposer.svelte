@@ -29,6 +29,8 @@
     CodeActionMenuPlugin,
     ColumnLayoutPlugin,
     TreeViewPlugin,
+    YouTubeNode,
+    TweetNode,
   } from '$lib/index.js';
   import {
     HeadingNode,
@@ -40,7 +42,7 @@
     LayoutContainerNode,
     LayoutItemNode,
   } from '$lib/index.js';
-  import {theme} from '$lib/themes/light-dark/editor/LightDarkEditorTheme.js';
+  import {theme} from '$lib/themes/system-light-dark/index.js';
   import {
     $getRoot as getRoot,
     $createTextNode as createTextNode,
@@ -53,6 +55,11 @@
   import TableHoverActionPlugin from '$lib/core/plugins/Table/TableHoverActionPlugin.svelte';
   import TableActionMenuPlugin from '$lib/core/plugins/Table/TableActionMenuPlugin.svelte';
   import TableCellResizerPlugin from '$lib/core/plugins/Table/TableCellResizerPlugin.svelte';
+  import YoutubePlugin from '$lib/core/plugins/youtube/YoutubePlugin.svelte';
+  import TwitterPlugin from '$lib/core/plugins/twitter/TwitterPlugin.svelte';
+  import BlueskyPlugin from '$lib/core/plugins/bluesky/BlueskyPlugin.svelte';
+  import {BlueskyNode} from '$lib/core/plugins/bluesky/BlueskyNode.js';
+  import TabIndentationPlugin from '$lib/core/plugins/TabIndentationPlugin.svelte';
 
   let isSmallWidthViewport = $state(true);
   let editorDiv: HTMLDivElement | undefined = $state();
@@ -76,6 +83,9 @@
       TableNode,
       TableCellNode,
       TableRowNode,
+      YouTubeNode,
+      TweetNode,
+      BlueskyNode,
     ],
     onError: (error: Error) => {
       throw error;
@@ -153,6 +163,11 @@
       <TableHoverActionPlugin anchorElem={editorDiv} />
       <TableCellResizerPlugin />
       <TableActionMenuPlugin anchorElem={editorDiv} cellMerge={true} />
+      <YoutubePlugin />
+      <TwitterPlugin />
+      <BlueskyPlugin />
+      <TabIndentationPlugin />
+
       <ActionBar />
     </div>
     <TreeViewPlugin />

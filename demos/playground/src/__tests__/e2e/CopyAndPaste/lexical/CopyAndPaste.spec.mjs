@@ -868,7 +868,7 @@ test.describe('CopyAndPaste', () => {
     isCollab,
     isPlainText,
   }) => {
-    test.fixme(); // TODO: flaky
+    test.fixme(isCollab);
     test.skip(isPlainText);
 
     // copying and pasting the node is easier than creating the clipboard data
@@ -884,7 +884,7 @@ test.describe('CopyAndPaste', () => {
       html`
         <p class="PlaygroundEditorTheme__paragraph"><br /></p>
         <div contenteditable="false" data-lexical-decorator="true">
-          <div class="PlaygroundEditorTheme__embedBlock">
+          <div class="PlaygroundEditorTheme__embedBlock" style="">
             <iframe
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen=""
@@ -896,7 +896,7 @@ test.describe('CopyAndPaste', () => {
           </div>
         </div>
         <div contenteditable="false" data-lexical-decorator="true">
-          <div class="PlaygroundEditorTheme__embedBlock">
+          <div class="PlaygroundEditorTheme__embedBlock" style="">
             <iframe
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowfullscreen=""

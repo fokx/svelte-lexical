@@ -23,13 +23,13 @@
     HorizontalRuleNode,
     ImageNode,
   } from '$lib/index.js';
-  import {theme as editorTheme} from '$lib/themes/light-dark/editor/LightDarkEditorTheme.js';
+  import {theme as editorTheme} from '$lib/themes/system-light-dark/index.js';
   import {
     $getRoot as getRoot,
     $createTextNode as createTextNode,
     $createParagraphNode as createParagraphNode,
   } from '$lib/index.js';
-  import MarkdownShortcutPlugin from '$lib/core/plugins/MardownShortcut/MarkdownShortcutPlugin.svelte';
+  import MarkdownShortcutPlugin from '$lib/core/plugins/MarkdownShortcut/MarkdownShortcutPlugin.svelte';
   import Composer3Toolbar from './Composer3Toolbar.svelte';
 
   const initialConfig = {

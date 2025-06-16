@@ -50,6 +50,13 @@
     TableHoverActionPlugin,
     TableActionMenuPlugin,
     TableCellResizerPlugin,
+    YoutubePlugin,
+    YouTubeNode,
+    TweetNode,
+    TwitterPlugin,
+    BlueskyPlugin,
+    BlueskyNode,
+    TabIndentationPlugin,
   } from 'svelte-lexical';
   import {prepopulatedRichText} from './prepopulatedRichText';
   import type {SettingsStore} from './settings/settingsStore';
@@ -102,6 +109,9 @@
       TableNode,
       TableCellNode,
       TableRowNode,
+      YouTubeNode,
+      TweetNode,
+      BlueskyNode,
     ],
     onError: (error: Error) => {
       throw error;
@@ -175,6 +185,10 @@
         <TableHoverActionPlugin anchorElem={editorDiv} />
         <TableCellResizerPlugin />
         <TableActionMenuPlugin anchorElem={editorDiv} cellMerge={true} />
+        <YoutubePlugin />
+        <TwitterPlugin />
+        <BlueskyPlugin />
+        <TabIndentationPlugin />
         {#if !isSmallWidthViewport}
           <FloatingLinkEditorPlugin anchorElem={editorDiv} />
           <CodeActionMenuPlugin anchorElem={editorDiv} />
